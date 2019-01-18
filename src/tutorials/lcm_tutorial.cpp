@@ -28,6 +28,7 @@ class OdomHandler
     // A callback for odometry messages
     void handle(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const odometry_t* msg)
     {
+        std::cout << "got something\n";
         // Copy
         odom_ = *msg;
         channel_ = channel;
@@ -59,7 +60,8 @@ int main(int argc, char ** argv)
     // When new messages are recieved the handleOdometry callback will be called
     lcm.subscribe(".*ODOMETRY", &OdomHandler::handle, &odom_handle);
 
-    while (1) {
+    // loop as long as lcm handle doesn't return an error
+    while (lcm.handle() == 0) {
         std::cout << "LCM Tutorial\n";
         // Fill in the oled msg
         msg.utime = utime_now();
@@ -72,7 +74,7 @@ int main(int argc, char ** argv)
         // Clear ss
         ss.clear();
         ss.str(std::string());
-        // Publish at 1 second intervals
-        usleep(1000000);
+        // Publish at 100 hz
+        usleep(10000);
     }
 }
