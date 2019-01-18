@@ -50,9 +50,28 @@ int main(int argc, char ** argv)
     msg.line1 = "Hello";
     msg.line2 = "world";
 
-    while(1) {
+    // Define a string stream to do float to string conversion
+    std::stringstream ss;
+
+    // Create an odom handler
+    OdomHandler odom_handle;
+    // Subscribe to all topics matching regx .*ODOMETRY
+    // When new messages are recieved the handleOdometry callback will be called
+    lcm.subscribe(".*ODOMETRY", &OdomHandler::handle, &odom_handle);
+
+    while (1) {
         std::cout << "LCM Tutorial\n";
+        // Fill in the oled msg
+        msg.utime = utime_now();
+        msg.line1 = odom_handle.channel_;
+        ss << "x: " << odom_handle.odom_.x << "  y:" << odom_handle.odom_.y << "  theta: " << odom_handle.odom_.theta;
+        msg.line2 = ss.str();
+        std::cout << msg.line1 << std::endl << msg.line2 << std::endl;
         lcm.publish(OLED_CHAN, &msg);
+
+        // Clear ss
+        ss.clear();
+        ss.str(std::string());
         // Publish at 1 second intervals
         usleep(1000000);
     }
