@@ -7,6 +7,8 @@
 #include <lcmtypes/oled_message_t.hpp>
 // Code for producing timestamps
 #include <common/timestamp.h>
+// The message type for odometry
+#include <lcmtypes/odometry_t.hpp>
 
 #include <ctime>
 #include <iostream>
@@ -15,6 +17,22 @@
 #include <iomanip>
 
 #include <unistd.h>
+
+class OdomHandler
+{
+  public:
+    // hold odometry
+    odometry_t odom_;
+    // hold channel name
+    std::string channel_;
+    // A callback for odometry messages
+    void handle(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const odometry_t* msg)
+    {
+        // Copy
+        odom_ = *msg;
+        channel_ = channel;
+    }
+};
 
 int main(int argc, char ** argv)
 {
