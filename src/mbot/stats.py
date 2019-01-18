@@ -60,7 +60,7 @@ lines = ['', '', '', '']
 def oled_message_handler(channel, data):
     msg = oled_message_t.decode(data)
     lines[2] = msg.line1
-    #lines[3] = msg.line2
+    lines[3] = msg.line2
 
 def exploration_status_handler(channel, data):
     msg = exploration_status_t.decode(data)
@@ -79,7 +79,7 @@ def main():
 
     lc = lcm.LCM("udpm://239.255.76.67:7667?ttl=2")
     lc.subscribe(OLED_CHANNEL, oled_message_handler)
-    lc.subscribe(EXPLORATION_STATUS_CHANNEL, exploration_status_handler)
+    # lc.subscribe(EXPLORATION_STATUS_CHANNEL, exploration_status_handler)
 
     thread.start_new_thread( handle_lcm, (lc, ) )
 
