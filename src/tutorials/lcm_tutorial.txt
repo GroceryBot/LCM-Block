@@ -1,0 +1,30 @@
+# Instructions for lcm_tutorial
+# Useful refernces:
+* https://lcm-proj.github.io/tut_cpp.html
+* botlab-w19/src/mbot/oled_example.cpp
+* botlab-w19/apps/botgui/...
+
+1. clone botlab-w19 or fetch lattest updates
+2. switch to lcm_tutorial_start branch
+3. grab a robot
+4. copy or update the repo over to your robot
+5. run ps -aux | grep stats
+6. sudo kill -9 pid of stats.py
+7. run ./stats.py in botlab-w19/src/mbot/stats.py
+8. run bot-lcm-tunnel robot_ip
+9. include lcm includes
+10. init lcm
+11. include oled_message_t
+12. include timestamps
+13. define an oled_message_t by looking up lcmtypes/oled_message_t.lcm
+14. make laptop-only -j8
+15. run ./bin/lcm-tutorial
+16. Success
+17. Build a class to handle odom
+18. Subscribe to odom
+19. Fill in an oled message with odom
+20. call lcm handle
+21. clone soln repo to robot
+22. run odometry soln
+23. Success
+24. Bounus challenge run slam solution and display odom and slam together and or there difference
