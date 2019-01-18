@@ -34,6 +34,7 @@ int main(int argc, char ** argv)
 
     while(1) {
         std::cout << "LCM Tutorial\n";
+        lcm.publish(OLED_CHAN, &msg);
         // Publish at 1 second intervals
         usleep(1000000);
     }
