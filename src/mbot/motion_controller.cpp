@@ -39,7 +39,7 @@ public:
     /**
     * Constructor for MotionController.
     */
-    MotionController(lcm::LCM * instance) : lcmInstance(instance)
+    MotionController(lcm::LCM * instance) : lcmInstance(instance), new_path_received_(false), end_time_(0)
     {
         ////////// TODO: Initialize your controller state //////////////
 
@@ -71,6 +71,17 @@ public:
         cmd.trans_v = 0.0f;
         cmd.angular_v = 0.0f;
         cmd.utime = now();
+
+        if (new_path_received_)
+        {
+            new_path_received_ = false;
+            end_time_ = now() + 1000000;
+        }
+
+        if (end_time_ > now())
+        {
+            cmd.trans_v = 1.0f;
+        }
 
         if(haveReachedTarget())
         {
@@ -105,6 +116,8 @@ public:
 
         // targets_ = ...
 
+        new_path_received_ = true;
+
     	std::cout << "received new path at time: " << path->utime << "\n";
     	for(auto pose : targets_){
     		std::cout << "(" << pose.x << "," << pose.y << "," << pose.theta << "); ";
@@ -125,6 +138,9 @@ public:
         /////// TODO: Implement your handler for new odometry data ////////////////////
 
         pose_xyt_t pose;
+        pose.x = 0;
+        pose.y = 0;
+        pose.theta = 0;
         odomTrace_.addPose(pose);
     }
 
@@ -154,6 +170,9 @@ private:
 
     message_received_t confirm;
     lcm::LCM * lcmInstance;
+
+    bool new_path_received_;
+    int64_t end_time_;
 
     int64_t now(){
         return utime_now() + time_offset;
