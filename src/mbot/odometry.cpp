@@ -17,6 +17,7 @@
 #include <iostream>
 
 #define PI 3.14159265358979323846
+
 class Odometry
 {
   private:
@@ -50,11 +51,42 @@ class Odometry
         }
 
         // Publish odometry msg
+        double DistancePerCount = (PI * WHEEL_DIAMETER) / (ENCODER_RES * GEAR_RATIO);
+        double LengthBetweenTwoWheels = WHEEL_BASE;
+
+        //               num_tick / (48 tick/rev * gearratio)
+        // rev / sec = ---------------------------------------
+        //                      time difference (sec)
+        // angular velocity = 2 * PI * rev / sec = rad / sec   (angular velocity of the wheel)
+
+        float dleft = msg->left_delta * DistancePerCount;
+        float dright = msg->right_delta * DistancePerCount;
+
+        // [dx dy d0] = [.5 .5 .5; 0 0 1; -1/b 1/b 0] [dleft dright dslip]
+
+        float dx = 0.5 * (dleft + dright);
+        float dy = 0;
+        float d0 = 1/LengthBetweenTwoWheels * (dright - dleft);
+        int64_t dt = msg->utime - last_time_;
+
+        theta_ += d0;
+        x_ += dx * cos(theta_) - dy * sin(theta_);
+        y_ += dx * sin(theta_) + dy * cos(theta_);
+
         odometry_t odom_msg;
+
         odom_msg.utime = msg->utime;
+        odom_msg.x = x_;
+        odom_msg.y = y_;
+
+        odom_msg.left_velocity = dleft / dt;
+        odom_msg.right_velocity = dright / dt;
+        odom_msg.fwd_velocity = dx / dt;
+        odom_msg.ang_velocity = d0 / dt;
+        odom_msg.theta = theta_;
         lcm_instance_->publish(ODOMETRY_CHANNEL, &odom_msg);
 
-        // printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
+        printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
     }
 
 
