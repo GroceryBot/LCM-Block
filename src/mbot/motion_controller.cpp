@@ -15,8 +15,13 @@
 #include <iostream>
 #include <cassert>
 #include <signal.h>
+#include <math.h>
 
+#include <fstream>
+#include <iterator>
+#include <vector>
 
+#define PI 3.14159265358979323846
 float clamp_speed(float speed)
 {
     if(speed < -1.0f)
@@ -66,11 +71,16 @@ public:
     mbot_motor_command_t updateCommand(void)
     {
         //////////// TODO: Implement your feedback controller here. //////////////////////
+        // Use the data from odomTrace_ to update the next pose, odomTrace_ is a vector of type pose_xyt_t
 
+        //initialization of motor command
         mbot_motor_command_t cmd;
         cmd.trans_v = 0.0f;
         cmd.angular_v = 0.0f;
         cmd.utime = now();
+        if(targets_.empty()){
+            return cmd;
+        }
 
         if(haveReachedTarget())
         {
@@ -79,16 +89,85 @@ public:
 
             if(!haveTarget)
             {
-                std::cout << "COMPLETED PATH!\n";
+              std::cout << "COMPLETED PATH!\n";
+
+              std::ofstream output_file("./true_pose_error.txt");
+              std::ostream_iterator<float> output_iterator(output_file, "\n");
+              std::copy(errors_.begin(), errors_.end(), output_iterator);
+
+              std::ofstream output_file2("./true_pose_errort.txt");
+              std::ostream_iterator<int64_t> output_iterator2(output_file2, "\n");
+              std::copy(errors_t_.begin(), errors_t_.end(), output_iterator2);
+
+              std::ofstream output_file3("./command_error.txt");
+              std::ostream_iterator<float> output_iterator3(output_file3, "\n");
+              std::copy(command_errors_.begin(), command_errors_.end(), output_iterator3);
+
+              std::ofstream output_file4("./command_errort.txt");
+              std::ostream_iterator<int64_t> output_iterator4(output_file4, "\n");
+              std::copy(command_errors_t_.begin(), command_errors_t_.end(), output_iterator4);
+
+              return cmd;
             }
         }
 
+
         // Use feedback based on heading error for line-of-sight vector pointing to the target.
         pose_xyt_t target = targets_.back();
+
+        //Make target longer to reach
+        //target.x *= 0.95;
+        //target.y *= 0.95;
         // Convert odometry to the global coordinates
         pose_xyt_t pose = currentPose();
 
+        target.theta = atan2((pose.y-target.y), (pose.x-target.x));
+        if (target.theta>0){
+            target.theta -= M_PI;
+        }
+        else{
+             target.theta += M_PI;
+        }
+        std::cout<<"atan theta: "<<target.theta<<std::endl;
 
+        float dd = std::abs(target.x-pose.x)<std::abs(target.y-pose.y) ? std::abs(target.x-pose.x):std::abs(target.y-pose.y);
+        command_errors_.push_back(dd);
+        command_errors_t_.push_back(now());
+
+        if(new_path_received_){
+            new_path_received_ = false;
+            end_time_ = now()+100000000; //timeout period
+        }
+        if(end_time_ > now()){
+            std::cout<<"POSE: x, y, theta: "<<pose.x<<" "<<pose.y<<" "<<pose.theta<<std::endl;
+            std::cout<<"TARGET: x, y, theta: "<<target.x<<" "<<target.y<<" "<<target.theta<<std::endl;
+    	    float ang_tolerance = (turn90) ? 0.03 : 0.1;
+    	    std::cout<<"Angle tolerance: "<<ang_tolerance<<std::endl;
+
+            if(std::abs(target.theta - pose.theta)<ang_tolerance){
+                state_=State::DRIVE;
+                std::cout<<"State: drive.\n";
+                turn90 = false;
+            }
+            else{
+                state_=State::TURN;
+                std::cout<<"State: turn.\n";
+            }
+            if(state_== State::TURN){
+                //TODO: maybe change trans_v not 0 when turning
+                cmd.trans_v = turn_speed;
+                cmd.angular_v = clamp_speed(turn_pid(target, pose));
+                std::cout<<"AV command: "<<cmd.angular_v<<std::endl;
+            }
+            else if(state_ == State::DRIVE){
+                cmd.angular_v = 0.0f;
+                cmd.trans_v = clamp_speed(drive_pid(target, pose));
+                std::cout<<"TV command: "<<cmd.trans_v<<std::endl;
+            }
+        }
+        else{
+        std::cout<<"TIME OUT!!!\n";
+        }
         return cmd;
     }
 
@@ -102,15 +181,14 @@ public:
     void handlePath(const lcm::ReceiveBuffer* buf, const std::string& channel, const robot_path_t* path)
     {
         /////// TODO: Implement your handler for new paths here ////////////////////
-
-        // targets_ = ...
-
+        targets_ = path->path;
+        //targets_.erase(targets_.begin());
+        std::reverse(targets_.begin(), targets_.end());
     	std::cout << "received new path at time: " << path->utime << "\n";
     	for(auto pose : targets_){
     		std::cout << "(" << pose.x << "," << pose.y << "," << pose.theta << "); ";
     	}std::cout << "\n";
-
-        assignNextTarget();
+        new_path_received_ = true;
 
         confirm.utime = now();
         confirm.creation_time = path->utime;
@@ -123,13 +201,20 @@ public:
     void handleOdometry(const lcm::ReceiveBuffer* buf, const std::string& channel, const odometry_t* odometry)
     {
         /////// TODO: Implement your handler for new odometry data ////////////////////
-
         pose_xyt_t pose;
+        pose.x = odometry->x;
+        pose.y = odometry->y;
+        pose.theta = odometry->theta;
+        pose.utime = odometry->utime;
         odomTrace_.addPose(pose);
+        currentFV = odometry->fwd_velocity;
+        currentAV = odometry->ang_velocity;
     }
 
     void handlePose(const lcm::ReceiveBuffer* buf, const std::string& channel, const pose_xyt_t* pose)
     {
+        //std::cout<<"SLAM data: "<<pose->x<<" "<<pose->y<<" "<<pose->theta<<std::endl;
+        //std::cout<<"Time diff: "<<now()-pose->utime<<std::endl;
         computeOdometryOffset(*pose);
     }
 
@@ -144,9 +229,15 @@ private:
     pose_xyt_t odomToGlobalFrame_;      // transform to convert odometry into the global/map coordinates for navigating in a map
     PoseTrace  odomTrace_;              // trace of odometry for maintaining the offset estimate
     std::vector<pose_xyt_t> targets_;
+    std::vector<float> errors_;
+    std::vector<int64_t> errors_t_;
+
+    std::vector<float> command_errors_;
+    std::vector<int64_t> command_errors_t_;
+
 
     // State of the motion controller
-    State state_;
+    State state_ = State::TURN;
 
     int64_t time_offset;
 
@@ -155,8 +246,44 @@ private:
     message_received_t confirm;
     lcm::LCM * lcmInstance;
 
+    bool new_path_received_ = false;
+    int64_t end_time_ = 0;
+
+    const float Kp_drive = 0.4f; //0.4
+    const float Ki_drive = 0.0f;
+    const float Kd_drive = 0.3f; //0.3
+    const float turn_speed = 0.08f;
+
+    const float Kp_angular = 1.6f; //1.8
+    const float Ki_angular = 0.0f;
+    const float Kd_angular = 1.5f; //1.5
+    bool turn90 = false;
+
+
+    float currentFV = 0.0;
+    float currentAV = 0.0;
+    float Ui_turn = 0.0;
+    float Ui_drive = 0.0;
     int64_t now(){
         return utime_now() + time_offset;
+    }
+
+
+    float turn_pid(const pose_xyt_t& target, const pose_xyt_t& current){
+        float Up = Kp_angular*clamp_radians(target.theta - current.theta);
+        std::cout<<"Current AV: "<<currentAV<<std::endl;
+        float Ud = Kd_angular*(-currentAV);
+        Ui_turn += Ki_angular*clamp_radians(target.theta - current.theta);
+        return Up+Ud+Ui_turn;
+    }
+
+
+    float drive_pid(const pose_xyt_t& target, const pose_xyt_t& current){
+        float e = sqrt((target.x - current.x)*(target.x - current.x) + (target.y - current.y)*(target.y - current.y));
+        float Up = Kp_drive*(e);
+        float Ud = Kd_drive*(turn_speed-currentFV);
+        Ui_drive += Ki_drive*e;
+        return Up+Ud+Ui_drive;
     }
 
     bool haveReachedTarget(void)
@@ -183,7 +310,6 @@ private:
 
         float xError = std::abs(target.x - pose.x);
         float yError = std::abs(target.y - pose.y);
-
         return (xError < tolerance) && (yError < tolerance);
     }
 
@@ -194,29 +320,51 @@ private:
         {
             targets_.pop_back();
         }
-
         // TODO: Reset all error and state terms when switching to a new target
-
+        state_ = State::TURN;
+        Ui_turn = 0.0;
+        Ui_drive = 0.0;
+        turn90 = true;
         return !targets_.empty();
     }
 
     void computeOdometryOffset(const pose_xyt_t& globalPose)
     {
         /////// TODO: Implement your handler for new pose data ////////////////////
-        odomToGlobalFrame_.x = 0;
-        odomToGlobalFrame_.y = 0;
-        odomToGlobalFrame_.theta = 0;
+        pose_xyt_t pose_t = odomTrace_.poseAt(globalPose.utime+time_offset);
+        odomToGlobalFrame_.x = -pose_t.x + globalPose.x;
+        odomToGlobalFrame_.y = -pose_t.y + globalPose.y;
+        odomToGlobalFrame_.theta = -pose_t.theta + globalPose.theta;
+        float d = sqrt(odomToGlobalFrame_.x*odomToGlobalFrame_.x + odomToGlobalFrame_.y*odomToGlobalFrame_.y);
+        errors_.push_back(d);
+        errors_t_.push_back(now());
     }
 
     pose_xyt_t currentPose(void)
     {
         assert(!odomTrace_.empty());
-
         pose_xyt_t odomPose = odomTrace_.back();
         pose_xyt_t pose;
+        pose.x = odomPose.x+odomToGlobalFrame_.x;
+        pose.y = odomPose.y+odomToGlobalFrame_.y;
+        pose.theta = odomPose.theta;//+odomToGlobalFrame_.theta;
+        pose.utime = now();
         // TODO: Implement transform from odom frame to slam frame
         return pose;
     }
+
+     float clamp_radians(float angle){
+        if(angle < -PI)
+        {
+            for(; angle < -PI; angle += 2.0*PI);
+        }
+        else if(angle > PI)
+        {
+            for(; angle > PI; angle -= 2.0*PI);
+        }
+        return angle;
+    }
+
 };
 
 
@@ -245,3 +393,4 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
