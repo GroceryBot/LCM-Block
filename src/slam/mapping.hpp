@@ -3,6 +3,7 @@
 
 #include <lcmtypes/pose_xyt_t.hpp>
 #include <cstdint>
+#include <lcmtypes/lidar_t.hpp>
 
 class OccupancyGrid;
 class lidar_t;
@@ -39,6 +40,8 @@ private:
     const int8_t kMissOdds_;
     
     //////////////////// TODO: Add any private members needed for your occupancy grid mapping algorithm ///////////////
+    pose_xyt_t last_pose;
+    bool started = false;
 };
 
 #endif // SLAM_MAPPING_HPP
