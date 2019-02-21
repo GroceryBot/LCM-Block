@@ -29,22 +29,24 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
     	started = true;
     	return;
     }
-    if (pose.x != last_pose.x || pose.y != last_pose.y || pose.theta != last_pose.theta) {
-    }
     MovingLaserScan ml_scan(scan, last_pose, pose);
     for (int i = 0; i < ml_scan.size(); ++i) {
-    	for (float dist_ = 0; dist_ < ml_scan[i].range - 0.1; dist_ += 0.05) {
+        float x = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
+        float y = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
+        int val = map.logOdds(floor(x), floor(y)) + kHitOdds_;
+        if (val > 127) val = 127;
+        map.setLogOdds(floor(x), floor(y), val);
+
+    	for (float dist_ = 0; dist_ < ml_scan[i].range; dist_ += 0.05) {
     		float x_intermediate = (ml_scan[i].origin.x + calculateX(dist_, ml_scan[i].theta)) * 20 + 100;
     		float y_intermediate = (ml_scan[i].origin.y + calculateY(dist_, ml_scan[i].theta)) * 20 + 100;
-    		int val = map.logOdds(x_intermediate, y_intermediate) - kMissOdds_;
+            val = map.logOdds(floor(x_intermediate), floor(y_intermediate)) - kMissOdds_;
     		printf("val %d\n", val);
     		printf("kMissOdds %d\n", kMissOdds_);
     		if (val < -127) val = -127;
-    		map.setLogOdds(x_intermediate, y_intermediate, val);
+            if (!(floor(x) == floor(x_intermediate) && floor(y) == floor(y_intermediate))) 
+    		  map.setLogOdds(floor(x_intermediate), floor(y_intermediate), val);
     	}
-    	float x = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
-    	float y = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
-    	map.setLogOdds(x, y, map.logOdds(x, y) + kHitOdds_);
 
     }
     last_pose = pose;
