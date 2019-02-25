@@ -9,7 +9,7 @@ struct particle_t;
 /**
 * ActionModel implements the sampling-based odometry action model for estimating the motion of the robot between
 * time t and t'.
-* 
+*
 * An action model is used to propagate a sample from the prior distribution, x, into
 * the proposal distribution, x', based on the supplied motion estimate of the robot
 * in the time interval [t, t'].
@@ -22,18 +22,18 @@ struct particle_t;
 * updateAction() provides the most recent odometry data so the action model can update the distributions from
 * which it will sample.
 *
-* applyAction() applies the action to the provided sample and returns a new sample that can be part of the proposal 
+* applyAction() applies the action to the provided sample and returns a new sample that can be part of the proposal
 * distribution for the particle filter.
 */
 class ActionModel
 {
 public:
-    
+
     /**
     * Constructor for ActionModel.
     */
     ActionModel(void);
-    
+
     /**
     * updateAction sets up the motion model for the current update for the localization.
     * After initialization, calls to applyAction() will be made, so all distributions based on sensor data
@@ -43,7 +43,7 @@ public:
     * \return   The pose transform distribution representing the uncertainty of the robot's motion.
     */
     bool updateAction(const pose_xyt_t& odometry);
-    
+
     /**
     * applyAction applies the motion to the provided sample and returns a new sample that
     * can be part of the proposal distribution for the particle filter.
@@ -52,10 +52,25 @@ public:
     * \return   New sample based on distribution from the motion model at the current update.
     */
     particle_t applyAction(const particle_t& sample);
-    
+
 private:
-    
+
     ////////// TODO: Add private member variables needed for you implementation ///////////////////
+    int64_t last_time = 0;
+    const float alpha1 = 0.01;
+    const float alpha2 = 0.01;
+    const float alpha3 = 0.01;
+    const float alpha4 = 0.01;
+    const float alpha5 = 0.01;
+    const float alpha6 = 0.01;
+    float rot1_var;
+    float trans_var;
+    float rot2_var;
+    
+    float del_rot1;
+    float del_trans;
+    float del_rot2;
+    pose_xyt_t last_pose;
 };
 
 #endif // SLAM_ACTION_MODEL_HPP
