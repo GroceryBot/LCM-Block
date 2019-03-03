@@ -7,7 +7,7 @@
 
 
 ActionModel::ActionModel(void):
-rot1_var(0), trans_var(0), rot2_var(0),del_rot1(0), del_rot2(0), del_trans(0), last_pose()
+rot1_var(0), trans_var(0), rot2_var(0),del_rot1(0), del_trans(0), del_rot2(0)
 {}
 
 float sample_normal_dist(const float bsquared)
@@ -22,23 +22,31 @@ float sample_normal_dist(const float bsquared)
   return retval;
 }
 
-
 bool ActionModel::updateAction(const pose_xyt_t& odometry)
 {
-    if (!last_pose){
-      last_pose = odometry;
-      std::cout<<"No last odometry"<<std::endl;
+  ////////////// TODO: Implement code here to compute a new distribution of the motion of the robot ////////////////
+
+    //Save the pose at the first step and return false
+    if (lastPose_.empty()){
+      lastPose_.push_back(odometry);
+      //std::cout<<"No last odometry"<<std::endl;
       return false;
     }
 
-    float x = last_pose.x;
-    float y = last_pose.y;
-    float theta = last_pose.theta;
+    //Robot didn't move, return flase
+    if (lastPose_[0].x == odometry.x && lastPose_[0].y == odometry.y && lastPose_[0].theta == odometry.theta){
+      return false;
+    }
+
+    float x = lastPose_[0].x;
+    float y = lastPose_[0].y;
+    float theta = lastPose_[0].theta;
 
     float xprime = odometry.x;
     float yprime  = odometry.y;
     float thetaprime  = odometry.theta;
 
+    //Calculate the distribution paramters
     del_rot1 = atan2(yprime-y, xprime-x) - theta;
     del_trans = sqrt((x-xprime)*(x-xprime) + (y-yprime)*(y-yprime));
     del_rot2 = thetaprime - theta - del_rot1;
@@ -46,8 +54,7 @@ bool ActionModel::updateAction(const pose_xyt_t& odometry)
     rot1_var = alpha1*del_rot1*del_rot1 + alpha2*del_trans*del_trans;
     trans_var = alpha3*del_trans*del_trans + alpha4*del_rot1*del_rot1 + alpha4*del_rot2*del_rot2;
     rot2_var = alpha1*del_rot2*del_rot2 + alpha2*del_trans*del_trans;
-    last_pose = odometry;
-    ////////////// TODO: Implement code here to compute a new distribution of the motion of the robot ////////////////
+    lastPose_[0] = odometry;
     return true;
 }
 

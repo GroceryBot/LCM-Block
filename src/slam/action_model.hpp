@@ -56,7 +56,8 @@ public:
 private:
 
     ////////// TODO: Add private member variables needed for you implementation ///////////////////
-    int64_t last_time = 0;
+
+    //TODO: these member variables should be further tuned
     const float alpha1 = 0.01;
     const float alpha2 = 0.01;
     const float alpha3 = 0.01;
@@ -66,11 +67,11 @@ private:
     float rot1_var;
     float trans_var;
     float rot2_var;
-    
+
     float del_rot1;
     float del_trans;
     float del_rot2;
-    pose_xyt_t last_pose;
+    std::vector<pose_xyt_t> lastPose_;
 };
 
 #endif // SLAM_ACTION_MODEL_HPP
