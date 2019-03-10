@@ -102,7 +102,7 @@ private:
     // Allow private write-access to cells
     float& distance(int x, int y) { return cells_[cellIndex(x, y)]; }
 
-    double findDistance(int x, int y, const OccupancyGrid& map);
+    float findDistance(int x, int y, const OccupancyGrid& map);
 
 };
 
