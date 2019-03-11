@@ -19,7 +19,6 @@ float calculateX(float distance, float theta) {
 float calculateY(float distance, float theta) {
 	return distance * sin(theta);
 }
-
 void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGrid& map)
 {
     //////////////// TODO: Implement your occupancy grid algorithm here ///////////////////////
@@ -31,23 +30,23 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
     }
     MovingLaserScan ml_scan(scan, last_pose, pose);
     for (unsigned int i = 0; i < ml_scan.size(); ++i) {
-        float x = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
-        float y = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
-        int val = map.logOdds(floor(x), floor(y)) + kHitOdds_;
-        if (val > 127) val = 127;
-        map.setLogOdds(floor(x), floor(y), val);
-
-    	for (float dist_ = 0; dist_ < ml_scan[i].range; dist_ += 0.05) {
-    		float x_intermediate = (ml_scan[i].origin.x + calculateX(dist_, ml_scan[i].theta)) * 20 + 100;
-    		float y_intermediate = (ml_scan[i].origin.y + calculateY(dist_, ml_scan[i].theta)) * 20 + 100;
-            val = map.logOdds(floor(x_intermediate), floor(y_intermediate)) - kMissOdds_;
-    		//printf("val %d\n", val);
-    		//printf("kMissOdds %d\n", kMissOdds_);
-    		if (val < -127) val = -127;
-            if (!(floor(x) == floor(x_intermediate) && floor(y) == floor(y_intermediate)))
-    		  map.setLogOdds(floor(x_intermediate), floor(y_intermediate), val);
-    	}
+        float x = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
+        float y = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
+        float error = -1.0;
+        float dx = x - ml_scan[i].origin.x;
+        float dy = y - ml_scan[i].origin.y;
+        float d_error = abs(dy/dx);
+        float cur_y = ml_scan[i].origin.y;
+        for (float cur_x = ml_scan[i].origin.x; cur_x < x; cur_x += 0.05) {
+            //UPDATE MAP START
+            
+            //UPDATE MAP END
+            error = error + d_error;
+            if (error > 0.0) {
+                cur_y = y + 0.05;
+                error -= 1;
+            }
+        }
     }
     last_pose = pose;
-
 }
