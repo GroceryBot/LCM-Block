@@ -5,6 +5,7 @@
 #include <lcmtypes/robot_path_t.hpp>
 #include <lcmtypes/pose_xyt_t.hpp>
 #include <limits>
+#include <planning/Node.hpp>
 
 
 class ObstacleDistanceGrid;
@@ -27,36 +28,22 @@ struct SearchParams
 };
 
 
-class Node
-{
-public:
-  Point<int> n;
-  const Node *p;
-  float f_score;
-  float g_score;
-
-  Node(Point<int> n, const Node *p, float g_score):
-  n(Point<int>(n.x, n.y)), p(p), f_score(std::numeric_limits<float>::infinity()), g_score(g_score)
-  {};
-};
-
-
 struct Compare
 {
-    bool operator()(const Node& lhs, const Node& rhs)
+    bool operator()(const Node* lhs, const Node* rhs) const
     {
-      return lhs.f_score > rhs.f_score;
+      return lhs->f_score < rhs->f_score;
     }
 };
 
 
 struct hash
 {
-    size_t operator()(Point<int> const & x) const
+    size_t operator()(Node const & x) const
     {
         return (
-            (51 + std::hash<int>()(x.x)) * 51
-            + std::hash<int>()(x.y)
+            (51 + std::hash<int>()(x.n.x)) * 51
+            + std::hash<int>()(x.n.y)
         );
     }
 };
