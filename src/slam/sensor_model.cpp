@@ -24,11 +24,11 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
         int y = (ml_scan[i].origin.y + range*sin(theta))*20+100;
         //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
         //TODO: should be tuned for better result
-        if(map.logOdds(x,y)>125){
-          q*=0.8;
+        if(map.logOdds(x,y)>120){
+          q*=1.2;
         }
         else{
-          q*=0.4;
+          q*=0.8;
         }
       }
     }

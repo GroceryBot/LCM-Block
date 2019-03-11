@@ -7,7 +7,7 @@
 
 
 ActionModel::ActionModel(void):
-rot1_var(0), trans_var(0), rot2_var(0),del_rot1(0), del_trans(0), del_rot2(0)
+rot1_var(0.07), trans_var(0.07), rot2_var(0.07),del_rot1(0.07), del_trans(0.07), del_rot2(0.07)
 {}
 
 float sample_normal_dist(const float bsquared)
