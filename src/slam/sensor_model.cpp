@@ -25,7 +25,7 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
         //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
         //TODO: should be tuned for better result
         if(map.logOdds(x,y)>120){
-          q*=1.2;
+          q*=1.05;
         }
         else{
           q*=0.8;

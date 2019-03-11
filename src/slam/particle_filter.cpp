@@ -16,16 +16,19 @@ void ParticleFilter::initializeFilterAtPose(const pose_xyt_t& pose)
 {
     ///////////// TODO: Implement your method for initializing the particles in the particle filter /////////////////
     //uniformly assigned weight
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0,0.01);
+    
     std::cout<<pose.x<<" "<<pose.y<<" "<<pose.theta<<std::endl;
     double w =  1.0/kNumParticles_;
     //randomly initialize posterior_
     for (int i=0; i<kNumParticles_; i++){
       particle_t randParticle;
       pose_xyt_t randPose;
-      //Initialization around the start pose with uniform error [-0.25, 0.25]
-      randPose.x = pose.x+(rand()%200 *0.0025-0.25);
-      randPose.y = pose.y+(rand()%200 *0.0025-0.25);
-      randPose.theta = pose.theta + (rand()%200 *0.0025-0.25);
+      //Initialization around the start pose with normal error 
+      randPose.x = pose.x + distribution(generator); 
+      randPose.y = pose.y + distribution(generator); 
+      randPose.theta = pose.theta + distribution(generator); 
       randPose.utime = pose.utime;
       randParticle.pose = randPose;
       randParticle.weight = w;
@@ -87,7 +90,7 @@ std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
 
     //draw M particles from previous poterior distribution
     for(int i=0; i<kNumParticles_; i++){
-      double random_weight = rand()%20000 *0.00005;
+      double random_weight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
       //binary search to pick particle -- TODO: this can be changed to better performance algorithm
       int l = 0;
       int r = kNumParticles_-1;
@@ -95,7 +98,9 @@ std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
       while (l<=r){
         int m = l+(r-l)/2;
         if (m+1<kNumParticles_){
-          if (weight[m] < random_weight && weight[m+1] >= random_weight){
+          printf("weight %f\n", weight[m]);
+          if (weight[m] < random_weight && weight[m + 1] >= random_weight)
+          {
             prior.push_back(posterior_[m]);
             break;
           }
@@ -159,7 +164,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t>& 
     float theta = 0;
     //std::cout<<"Posterior size: "<<posterior.size()<<std::endl;
     for(unsigned int i=0; i<posterior.size();i++){
-      if (abs(posterior[i].pose.x) < 5 &&abs(posterior[i].pose.y) < 5){
+      if (std::abs(posterior[i].pose.x) < 5 && std::abs(posterior[i].pose.y) < 5){
         x+=posterior[i].pose.x * posterior[i].weight;
         y+=posterior[i].pose.y * posterior[i].weight;
         theta+=posterior[i].pose.theta * posterior[i].weight;
@@ -168,6 +173,6 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t>& 
     pose.x = x;
     pose.y = y;
     pose.theta = theta;
-    std::cout<<"Estimated pose: "<< pose.x<<" "<< pose.y<<" "<< pose.theta<<std::endl;
+    // std::cout<<"Estimated pose: "<< pose.x<<" "<< pose.y<<" "<< pose.theta<<std::endl;
     return pose;
 }
