@@ -1,5 +1,6 @@
 #include "queue"
 #include "unordered_set"
+#include "stack"
 
 #include <planning/astar.hpp>
 #include <planning/obstacle_distance_grid.hpp>
@@ -34,43 +35,50 @@ robot_path_t search_for_path(pose_xyt_t start,
     //Initialize search priority queue and visted list (using unordered map)
     std::priority_queue<Node, std::vector<Node>, Compare> pq;
     std::unordered_set<Point<int>, hash> visited_list;
-    //TODO: fix the problem on pointer handling
+    std::stack<Node> parents;
+
     pq.push(start_node);
     visited_list.insert(start_node.n);
     const Node* cur = &start_node;
-    //int count = 0;
-    while(!pq.empty() && !isDestinationReached(*cur, dest_node)){
+    //For debug
+    int count = 0;
+    while(!pq.empty() && !isDestinationReached(*cur, dest_node) && count<200){
       std::cout<<"pq size: "<<pq.size()<<" visited size: "<<visited_list.size()<<std::endl;
-      //for (auto iter = visited_list.begin(); iter !=visited_list.end(); iter++)
-      //      std::cout<<iter->x<<" "<<iter->y<<std::endl;
-      cur = &pq.top();
-      if(cur->p)
-      std::cout<<"current: "<<cur->n.x<<" "<<cur->n.y<<" parent: "<<cur->p->n.x<<" "<<cur->p->n.y<<std::endl;
+      if (visited_list.find(pq.top().n)==visited_list.end()){
+        Node parent(pq.top().n, pq.top().p, pq.top().g_score);
+        parent.f_score = pq.top().f_score;
+        parents.push(parent);
+        cur = &parents.top();
+        //For debug
+        if(cur->p)
+          std::cout<<"current: "<<cur->n.x<<" "<<cur->n.y<<" parent: "<<cur->p->n.x<<" "<<cur->p->n.y<<std::endl;
 
-      if(cur->p && cur->n.x == cur->p->n.x && cur->n.y == cur->p->n.y)
-        break;
+        //Debug
+        //if(cur->p && cur->n.x == cur->p->n.x && cur->n.y == cur->p->n.y)
+        //  break;
 
+        visited_list.insert(cur->n);
+        //Using 4-neighbour connection here -- can be changed to 8-neighbour
+        std::vector<Point<int>> neighbours;
+        neighbours.resize(4);
+        neighbours[0] = Point<int>(std::max(0,cur->n.x-1), cur->n.y);
+        neighbours[1] = Point<int>(cur->n.x, std::max(0,cur->n.y-1));
+        neighbours[2] = Point<int>(std::min(cur->n.x+1, width), cur->n.y);
+        neighbours[3] = Point<int>(cur->n.x, std::min(cur->n.y+1, height));
 
-      visited_list.insert(cur->n);
-      //Using 4-neighbour connection here -- can be changed to 8-neighbour
-      std::vector<Point<int>> neighbours;
-      neighbours.resize(4);
-      neighbours[0] = Point<int>(std::max(0,cur->n.x-1), cur->n.y);
-      neighbours[1] = Point<int>(cur->n.x, std::max(0,cur->n.y-1));
-      neighbours[2] = Point<int>(std::min(cur->n.x+1, width), cur->n.y);
-      neighbours[3] = Point<int>(cur->n.x, std::min(cur->n.y+1, height));
-
-      for(unsigned int i=0; i<neighbours.size(); i++){
-        if (visited_list.find(neighbours[i])==visited_list.end()
-            && distances(neighbours[i].x, neighbours[i].y)>params.minDistanceToObstacle){
-          std::cout<<"Neighbour #"<<i<<": "<<neighbours[i].x<<" "<<neighbours[i].y<<std::endl;
-          Node n(neighbours[i], cur, cur->g_score+metersPerCell);
-          n.f_score = n.g_score + calculateHscore(n, dest_node, distances, params);
-          pq.push(n);
+        for(unsigned int i=0; i<neighbours.size(); i++){
+          if (visited_list.find(neighbours[i])==visited_list.end()
+              && distances(neighbours[i].x, neighbours[i].y)>params.minDistanceToObstacle){
+            //std::cout<<"Neighbour #"<<i<<": "<<neighbours[i].x<<" "<<neighbours[i].y<<std::endl;
+            Node n(neighbours[i], cur, cur->g_score+metersPerCell);
+            n.f_score = n.g_score + calculateHscore(n, dest_node, distances, params);
+            //std::cout<<"Scores (f g h): "<<n.f_score<<" "<<n.g_score<<" "<<calculateHscore(n, dest_node, distances, params)<<std::endl;
+            pq.push(n);
+          }
         }
       }
       pq.pop();
-      //count++;
+      count++;
     }
 
     std::cout<<"Out of the while loop"<<std::endl;

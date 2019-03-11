@@ -45,7 +45,7 @@ struct Compare
 {
     bool operator()(const Node& lhs, const Node& rhs)
     {
-      return lhs.f_score < rhs.f_score;
+      return lhs.f_score > rhs.f_score;
     }
 };
 
