@@ -30,20 +30,28 @@ struct SearchParams
 
 struct Compare
 {
-    bool operator()(const Node* lhs, const Node* rhs) const
+    inline bool operator()(const Node* lhs, const Node* rhs) const
     {
-      return lhs->f_score < rhs->f_score;
+      return lhs->f_score > rhs->f_score;
     }
+};
+
+
+struct equal
+{
+  inline bool operator()( Node* const lhs,  Node* const rhs) const{
+      return lhs->n.x == rhs->n.x && lhs->n.y == rhs->n.y;
+  }
 };
 
 
 struct hash
 {
-    size_t operator()(Node const & x) const
+    size_t operator()(Node* const  x) const
     {
         return (
-            (51 + std::hash<int>()(x.n.x)) * 51
-            + std::hash<int>()(x.n.y)
+            (51 + std::hash<int>()(x->n.x)) * 51
+            + std::hash<int>()(x->n.y)
         );
     }
 };
