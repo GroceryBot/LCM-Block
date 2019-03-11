@@ -1,6 +1,7 @@
 #ifndef PLANNING_ASTAR_HPP
 #define PLANNING_ASTAR_HPP
 
+#include <common/point.hpp>
 #include <lcmtypes/robot_path_t.hpp>
 #include <lcmtypes/pose_xyt_t.hpp>
 #include <limits>
@@ -29,16 +30,13 @@ struct SearchParams
 class Node
 {
 public:
-  int X;
-  int Y;
-  int parentX;
-  int parentY;
+  Point<int> n;
+  const Node *p;
   float f_score;
   float g_score;
-  bool visited;
 
-  Node(int x, int y, int px, int py, float g_score):
-  X(x), Y(y), parentX(px), parentY(py), f_score(std::numeric_limits<float>::infinity()), g_score(g_score), visited(false)
+  Node(Point<int> n, const Node *p, float g_score):
+  n(Point<int>(n.x, n.y)), p(p), f_score(std::numeric_limits<float>::infinity()), g_score(g_score)
   {};
 };
 
@@ -51,6 +49,17 @@ struct Compare
     }
 };
 
+
+struct hash
+{
+    size_t operator()(Point<int> const & x) const
+    {
+        return (
+            (51 + std::hash<int>()(x.x)) * 51
+            + std::hash<int>()(x.y)
+        );
+    }
+};
 
 
 
@@ -70,18 +79,13 @@ robot_path_t search_for_path(pose_xyt_t start,
                              const SearchParams& params);
 
 
-//Test if a node is valid.
-static bool isValid(const Node &n, const ObstacleDistanceGrid& distances,
-                    const SearchParams& params);
-
-
 //Test if the destination is reached.
-static bool isDestinationReached(const Node &n, const Node &dest);
+bool isDestinationReached(const Node &n, const Node &dest);
 
 
 //Calculate f_score = distance from start + heuristic distance
 
-static float calculateHscore(const Node &n, const Node &dest,
+float calculateHscore(const Node &n, const Node &dest,
                              const ObstacleDistanceGrid& distances,
                              const SearchParams& params);
 
