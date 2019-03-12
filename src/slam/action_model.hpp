@@ -58,7 +58,7 @@ private:
     ////////// TODO: Add private member variables needed for you implementation ///////////////////
 
     //TODO: these member variables should be further tuned
-  const float val = 0.01;
+  const float val = 0.02;
   const float alpha1 = val;
   const float alpha2 = val;
   const float alpha3 = val;

@@ -14,23 +14,25 @@ SensorModel::SensorModel(void)
 double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, const OccupancyGrid& map)
 {
     ///////////// TODO: Implement your sensor model for calculating the likelihood of a particle given a laser scan //////////
-    double q = 1.0;
     MovingLaserScan ml_scan(scan, sample.parent_pose, sample.pose);
+    float hits = 0.0;
+    float total = 0.0;
     for (unsigned int i = 0; i < ml_scan.size(); ++i) {
-      if (ml_scan[i].range < 5){
         float theta = ml_scan[i].theta;
         float range = ml_scan[i].range;
         int x = (ml_scan[i].origin.x + range*cos(theta))*20+100;
         int y = (ml_scan[i].origin.y + range*sin(theta))*20+100;
         //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
         //TODO: should be tuned for better result
-        if(map.logOdds(x,y)>120){
-          q*=1.05;
+        if(map.logOdds(x,y)>30){
+          hits += 1.0;
         }
-        else{
-          q*=0.8;
+        else if (map.logOdds(x + 1,y)>30 || map.logOdds(x - 1,y)>30 || map.logOdds(x,y + 1)>30 ||map.logOdds(x,y - 1)>30 || map.logOdds(x+1,y+1)>30
+            || map.logOdds(x+1,y-1)>30 ||map.logOdds(x-1,y+1)>30 || map.logOdds(x -1,y-1)>30) {
+            hits += 0.5;
         }
-      }
+        total += 1.0;
     }
-    return q;
+    printf("BBBBBBBB=%f\n", hits/total);
+    return hits/total;
 }

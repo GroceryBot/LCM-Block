@@ -15,7 +15,21 @@ float sample_normal_dist(const float bsquared)
   float LO = -sqrt(std::abs(bsquared));
   float HIGH = sqrt(std::abs(bsquared));
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.007);
+  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.001);
+  return distribution(generator);
+  // float retval = 0;
+  // for(int i = 0; i < 12; ++i) {
+  //   retval += LO + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HIGH - LO)));
+  // }
+  // retval *= 0.5;
+  // return retval;
+}
+float sample_normal_dist_theta(const float bsquared)
+{
+  float LO = -sqrt(std::abs(bsquared));
+  float HIGH = sqrt(std::abs(bsquared));
+  std::default_random_engine generator;
+  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.001);
   return distribution(generator);
   // float retval = 0;
   // for(int i = 0; i < 12; ++i) {
@@ -71,8 +85,8 @@ particle_t ActionModel::applyAction(const particle_t& sample)
     pose_xyt_t pose = sample.pose;
     pose_xyt_t new_pose;
 
-    float del_rot1_hat = del_rot1 - sample_normal_dist(rot1_var);
-    float del_rot2_hat = del_rot2 - sample_normal_dist(rot2_var);
+    float del_rot1_hat = del_rot1 - sample_normal_dist_theta(rot1_var);
+    float del_rot2_hat = del_rot2 - sample_normal_dist_theta(rot2_var);
     float del_trans_hat = del_trans - sample_normal_dist(trans_var);
 
     new_pose.x = pose.x + del_trans_hat*cos(pose.theta + del_rot1_hat);
