@@ -22,6 +22,7 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
     float dx = x1 - x0;
     float dy = y1 - y0;
     float yi = 1;
+    kMissOdds = 2*kMissOdds;
     if (dy < 0) {
         yi = -1;
         dy = -dy;
@@ -90,7 +91,7 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
         float y0 = ml_scan[i].origin.y;
         float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
         float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
-        float k_m = 1;
+        float k_m = kMissOdds_;
         if (abs(y1 - y0) < abs(x1 - x0)) {
             if (x0 > x1) {
                 plotLineLow(x1, y1, x0, y0, map, k_m);
@@ -107,7 +108,7 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
                 plotLineHigh(x0, y0, x1, y1, map, k_m);
             }
         }
-        float k_h = 3;
+        float k_h = kHitOdds_;
         int val = map.logOdds(x1 * 20 + 100, y1 * 20 + 100);
         if (val >= 127 || val + k_h >= 127)
             val = 127;
