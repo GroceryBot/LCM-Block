@@ -156,7 +156,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t>& 
     pose.x = x;
     pose.y = y;
     pose.theta = theta;
-    std::cout<<"Estimated pose weight: "<< max_weight<<std::endl;
+    // std::cout<<"Estimated pose weight: "<< max_weight<<std::endl;
     return pose;
 
     // for(unsigned int i=0; i<posterior.size();i++){
