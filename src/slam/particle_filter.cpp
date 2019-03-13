@@ -144,31 +144,31 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t>& 
     float y = 0;
     float theta = 0;
     //std::cout<<"Posterior size: "<<posterior.size()<<std::endl;
-    float max_weight = -1;
-    for (unsigned int i=0; i<posterior.size();i++){
-      if (posterior[i].weight > max_weight){
-        max_weight = posterior[i].weight;
-        x=posterior[i].pose.x;
-        y=posterior[i].pose.y;
-        theta=posterior[i].pose.theta;
-      }
-    }
-    pose.x = x;
-    pose.y = y;
-    pose.theta = theta;
-    std::cout<<"Estimated pose weight: "<< max_weight<<std::endl;
-    return pose;
-
-    // for(unsigned int i=0; i<posterior.size();i++){
-    //   if (std::abs(posterior[i].pose.x) < 5 && std::abs(posterior[i].pose.y) < 5){
-    //     x+=posterior[i].pose.x * posterior[i].weight;
-    //     y+=posterior[i].pose.y * posterior[i].weight;
-    //     theta+=posterior[i].pose.theta * posterior[i].weight;
+    // float max_weight = -1;
+    // for (unsigned int i=0; i<posterior.size();i++){
+    //   if (posterior[i].weight > max_weight){
+    //     max_weight = posterior[i].weight;
+    //     x=posterior[i].pose.x;
+    //     y=posterior[i].pose.y;
+    //     theta=posterior[i].pose.theta;
     //   }
     // }
     // pose.x = x;
     // pose.y = y;
     // pose.theta = theta;
-    // std::cout<<"Estimated pose: "<< pose.x<<" "<< pose.y<<" "<< pose.theta<<std::endl;
+    // std::cout<<"Estimated pose weight: "<< max_weight<<std::endl;
     // return pose;
+
+    for(unsigned int i=0; i<posterior.size();i++){
+      if (std::abs(posterior[i].pose.x) < 5 && std::abs(posterior[i].pose.y) < 5){
+        x+=posterior[i].pose.x * posterior[i].weight;
+        y+=posterior[i].pose.y * posterior[i].weight;
+        theta+=posterior[i].pose.theta * posterior[i].weight;
+      }
+    }
+    pose.x = x;
+    pose.y = y;
+    pose.theta = theta;
+    std::cout<<"Estimated pose: "<< pose.x<<" "<< pose.y<<" "<< pose.theta<<std::endl;
+    return pose;
 }

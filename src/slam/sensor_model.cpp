@@ -24,12 +24,16 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
         int y = (ml_scan[i].origin.y + range*sin(theta))*20+100;
         //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
         //TODO: should be tuned for better result
-        if(map.logOdds(x,y)>30){
+        if(map.logOdds(x,y)>20){
           hits += 1.0;
         }
-        else if (map.logOdds(x + 1,y)>30 || map.logOdds(x - 1,y)>30 || map.logOdds(x,y + 1)>30 ||map.logOdds(x,y - 1)>30 || map.logOdds(x+1,y+1)>30
-            || map.logOdds(x+1,y-1)>30 ||map.logOdds(x-1,y+1)>30 || map.logOdds(x -1,y-1)>30) {
-            hits += 0.5;
+        else if (map.logOdds(x + 1,y)>20 || map.logOdds(x - 1,y)>20 || map.logOdds(x,y + 1)>20 ||map.logOdds(x,y - 1)>20 || map.logOdds(x+1,y+1)>20
+            || map.logOdds(x+1,y-1)>20 ||map.logOdds(x-1,y+1)>20 || map.logOdds(x -1,y-1)>20) {
+            hits += 0.7;
+        }
+        else if (map.logOdds(x + 2,y)>20 || map.logOdds(x + 2,y+1)>20 || map.logOdds(x + 2,y-1)>20 || map.logOdds(x - 2,y)>20 || map.logOdds(x -2,y+1)>20 || map.logOdds(x -2,y-1)>20 || map.logOdds(x,y + 2)>20 ||map.logOdds(x+1,y + 2)>20 || map.logOdds(x-1,y + 2)>20 
+            || map.logOdds(x,y - 2)>20 || map.logOdds(x+1,y - 2)>20 || map.logOdds(x-1,y - 2)>20 || map.logOdds(x+2,y+2)>20 || map.logOdds(x+2,y-2)>20 ||map.logOdds(x-2,y+2)>20 || map.logOdds(x -2,y-2)>20) {
+            hits += 0.4;
         }
         total += 1.0;
     }

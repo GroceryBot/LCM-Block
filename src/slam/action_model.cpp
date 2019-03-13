@@ -7,7 +7,7 @@
 
 
 ActionModel::ActionModel(void):
-rot1_var(0.02), trans_var(0.02), rot2_var(0.02),del_rot1(0.02), del_trans(0.02), del_rot2(0.02)
+rot1_var(0.01), trans_var(0.01), rot2_var(0.01),del_rot1(0.01), del_trans(0.01), del_rot2(0.01)
 {}
 
 float sample_normal_dist(const float bsquared)
@@ -15,7 +15,7 @@ float sample_normal_dist(const float bsquared)
   float LO = -sqrt(std::abs(bsquared));
   float HIGH = sqrt(std::abs(bsquared));
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.001);
+  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.005);
   return distribution(generator);
   // float retval = 0;
   // for(int i = 0; i < 12; ++i) {
@@ -29,7 +29,7 @@ float sample_normal_dist_theta(const float bsquared)
   float LO = -sqrt(std::abs(bsquared));
   float HIGH = sqrt(std::abs(bsquared));
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.001);
+  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.01);
   return distribution(generator);
   // float retval = 0;
   // for(int i = 0; i < 12; ++i) {
