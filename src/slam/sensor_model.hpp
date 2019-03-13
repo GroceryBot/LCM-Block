@@ -34,11 +34,12 @@ public:
     * \param    map                 Current map of the environment
     * \return   Likelihood of the particle given the current map and laser scan.
     */
+    void generateOccupied(const OccupancyGrid &map);
     double likelihood(const particle_t& particle, const lidar_t& scan, const OccupancyGrid& map);
 
-private:
-    // std::vector<std::pair<int, int>> occupied;
-    // bool init = false;
+  private:
+    std::vector<std::pair<int, int>> occupied;
+    bool init = false;
     ///////// TODO: Add any private members for your SensorModel ///////////////////
 };
 

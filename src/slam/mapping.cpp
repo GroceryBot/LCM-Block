@@ -90,29 +90,27 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
         float y0 = ml_scan[i].origin.y;
         float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
         float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
-        float k_m = 1;
         if (abs(y1 - y0) < abs(x1 - x0)) {
             if (x0 > x1) {
-                plotLineLow(x1, y1, x0, y0, map, k_m);
+                plotLineLow(x1, y1, x0, y0, map, kMissOdds_);
             }
             else {
-                plotLineLow(x0, y0, x1, y1, map, k_m);
+                plotLineLow(x0, y0, x1, y1, map, kMissOdds_);
             }
         }
         else {
             if (y0 > y1) {
-                plotLineHigh(x1, y1, x0, y0, map, k_m);
+                plotLineHigh(x1, y1, x0, y0, map, kMissOdds_);
             }
             else {
-                plotLineHigh(x0, y0, x1, y1, map, k_m);
+                plotLineHigh(x0, y0, x1, y1, map, kMissOdds_);
             }
         }
-        float k_h = 3;
         int val = map.logOdds(x1 * 20 + 100, y1 * 20 + 100);
-        if (val >= 127 || val + k_h >= 127)
+        if (val >= 127 || val + kHitOdds_ >= 127)
             val = 127;
         else 
-            val += k_h;
+            val += kHitOdds_;
         map.setLogOdds(x1*20 + 100, y1*20 + 100, val);
 
     }

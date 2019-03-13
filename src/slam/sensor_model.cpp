@@ -10,7 +10,7 @@ SensorModel::SensorModel(void)
     ///////// TODO: Handle any initialization needed for your sensor model
 }
 
-void generateOccupied(const OccupancyGrid& map, std::vector<std::pair<int, int>>& occupied) {
+void SensorModel::generateOccupied(const OccupancyGrid& map) {
     occupied.clear();
     for (int i = 0; i < map.widthInCells(); ++i) {
         for (int j = 0; j < map.heightInCells(); ++j) {
@@ -28,18 +28,9 @@ float distance(float x1, float y1, float x2, float y2) {
 double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, const OccupancyGrid& map)
 {
     ///////////// TODO: Implement your sensor model for calculating the likelihood of a particle given a laser scan //////////
-    // if (!init) {
-    //     generateOccupied(map, occupied);
-    //     init = true;
-    // }
-        std::vector<std::pair<int, int>> occupied;
-
-    for (int i = 0; i < map.widthInCells(); ++i) {
-        for (int j = 0; j < map.heightInCells(); ++j) {
-            if (map.logOdds(i, j) > 126) {
-                occupied.push_back({i, j});
-            }
-        }
+    if (!init) {
+        generateOccupied(map);
+        init = true;
     }
     MovingLaserScan ml_scan(scan, sample.parent_pose, sample.pose);
     float q = 0.0;
@@ -52,18 +43,18 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
         //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
         //TODO: should be tuned for better result
         double min_distance = 1000;
+        // printf("BBBBBBBB=%d\n", occupied.size());
         for (unsigned int k = 0; k < occupied.size(); ++k) {
-            float dist = distance(x, occupied[k].first, y, occupied[k].second);
+            float dist = distance(x, y, occupied[k].first, occupied[k].second);
             if (dist < min_distance) {
                 min_distance = dist;
             }
             if (min_distance == 0) break;
         }
-        if (min_distance == 0) {
-            min_distance = 0.1;
+        if (min_distance <= 0.1) {
+            min_distance = 0.5;
         }
         q += 1.0/(min_distance);
-        // printf("BBBBBBBB=%f\n", min_distance);
 
         // if(map.logOdds(x,y)>30){
         //   hits += 1.0;
@@ -74,6 +65,5 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
         // }
         // total += 1.0;
     }
-        // printf("AAAAAAA=%f\n", q);
     return q;
 }

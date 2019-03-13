@@ -29,7 +29,7 @@ float sample_normal_dist_theta(const float bsquared)
   float LO = -sqrt(std::abs(bsquared));
   float HIGH = sqrt(std::abs(bsquared));
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.01);
+  std::normal_distribution<double> distribution((HIGH + LO) / 2.0, 0.002);
   return distribution(generator);
   // float retval = 0;
   // for(int i = 0; i < 12; ++i) {
