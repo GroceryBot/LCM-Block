@@ -32,10 +32,10 @@ void ParticleFilter::initializeFilterAtPose(const pose_xyt_t& pose)
       randPose.utime = pose.utime;
       randParticle.pose = randPose;
       randParticle.weight = w;
-      std::cout<<"Rand pose "<<i<<" "<<randPose.x<<" "<<randPose.y<<" "<<randPose.theta<<" "<<randParticle.weight<<std::endl;
+      // std::cout<<"Rand pose "<<i<<" "<<randPose.x<<" "<<randPose.y<<" "<<randPose.theta<<" "<<randParticle.weight<<std::endl;
       posterior_[i] = randParticle;
     }
-    std::cout<<"Initialization done. Posterior size: "<< posterior_.size()<<std::endl;
+    // std::cout<<"Initialization done. Posterior size: "<< posterior_.size()<<std::endl;
 }
 
 
@@ -46,15 +46,13 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t&      odometry,
     // Only update the particles if motion was detected. If the robot didn't move, then
     // obviously don't do anything.
     bool hasRobotMoved = actionModel_.updateAction(odometry);
+    if (hasRobotMoved) {
 
-    if(hasRobotMoved)
-    {
-        auto prior = resamplePosteriorDistribution();
-        auto proposal = computeProposalDistribution(prior);
-        posterior_ = computeNormalizedPosterior(proposal, laser, map);
-        posteriorPose_ = estimatePosteriorPose(posterior_);
-    }
-
+      auto prior = resamplePosteriorDistribution();
+      auto proposal = computeProposalDistribution(prior);
+      posterior_ = computeNormalizedPosterior(proposal, laser, map);
+      posteriorPose_ = estimatePosteriorPose(posterior_);
+  }
     posteriorPose_.utime = odometry.utime;
 
     return posteriorPose_;
@@ -79,6 +77,10 @@ particles_t ParticleFilter::particles(void) const
 std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
 {
     //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0,0.005);
+    std::normal_distribution<double> distribution_theta(0.0,0.0005);
+
     std::vector<particle_t> prior;
     std::vector<double> weight(kNumParticles_);
     if (posterior_.empty()) return prior;
@@ -94,7 +96,11 @@ std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
       double random_weight = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
       std::vector<double>::iterator up;
       up= std::upper_bound (weight.begin(), weight.end(), random_weight);
-      prior.push_back(posterior_[std::distance(weight.begin(), up)]);
+      particle_t top = posterior_[std::distance(weight.begin(), up)];
+      top.pose.x += distribution(generator);
+      top.pose.y += distribution(generator);
+      top.pose.theta += distribution_theta(generator);
+      prior.push_back(top);
     }
     return prior;
 }
@@ -157,6 +163,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t>& 
     // pose.y = y;
     // pose.theta = theta;
     // std::cout<<"Estimated pose weight: "<< max_weight<<std::endl;
+    // if (max_weight < 0.2) 
     // return pose;
 
     for(unsigned int i=0; i<posterior.size();i++){

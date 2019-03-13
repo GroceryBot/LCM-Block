@@ -1,6 +1,6 @@
 #ifndef SLAM_SENSOR_MODEL_HPP
 #define SLAM_SENSOR_MODEL_HPP
-
+#include <vector>
 class  lidar_t;
 class  OccupancyGrid;
 struct particle_t;
@@ -37,7 +37,8 @@ public:
     double likelihood(const particle_t& particle, const lidar_t& scan, const OccupancyGrid& map);
 
 private:
-    
+    // std::vector<std::pair<int, int>> occupied;
+    // bool init = false;
     ///////// TODO: Add any private members for your SensorModel ///////////////////
 };
 
