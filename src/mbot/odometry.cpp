@@ -86,7 +86,7 @@ class Odometry
         odom_msg.theta = theta_;
         lcm_instance_->publish(ODOMETRY_CHANNEL, &odom_msg);
 
-        printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
+        //printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
     }
 
 
