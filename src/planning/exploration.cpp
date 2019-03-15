@@ -229,6 +229,7 @@ int8_t Exploration::executeInitializing(void)
     status.status = exploration_status_t::STATUS_COMPLETE;
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
     most_recent_path_time = 0;
+    currentPath_.path_length=0;
     return exploration_status_t::STATE_EXPLORING_MAP;
 }
 
@@ -251,8 +252,14 @@ int8_t Exploration::executeExploringMap(bool initialize)
     */
     planner_.setMap(currentMap_);
     frontiers_ = find_map_frontiers(currentMap_, currentPose_);
-    std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
-    currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
+    if(frontiers_.size()!=0){
+      std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
+      if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0
+          || abs(currentPose_.x-currentTarget_.x) + abs(currentPose_.y-currentTarget_.y)<0.05 ){
+        currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
+        currentTarget_ = currentPath_.path[currentPath_.path_length-1];
+      }
+    }
     most_recent_path_time = currentPath_.utime;
     std::cout<<currentPath_.utime<<std::endl;
 
@@ -315,9 +322,26 @@ int8_t Exploration::executeReturningHome(bool initialize)
     *       (1) dist(currentPose_, targetPose_) < kReachedPositionThreshold  :  reached the home pose
     *       (2) currentPath_.path_length > 1  :  currently following a path to the home pose
     */
+    std::cout<<"Home pose: "<<homePose_.x<<" "<<homePose_.y<<std::endl;
     planner_.setMap(currentMap_);
-    currentPath_ = planner_.planPath(currentPose_, homePose_);
-
+    //currentPath_ = planner_.planPath(currentPose_, homePose_);
+    pose_xyt_t homePose2;
+    int l = 10;
+    for (int m=0; m<l; ++m){
+      for (int n=0; n<l; ++n){
+        homePose2.x = homePose_.x + (m-l/2)*currentMap_.metersPerCell();
+        homePose2.y = homePose_.y + (n-l/2)*currentMap_.metersPerCell();
+        if(planner_.isValidGoal(homePose2)){
+          robot_path_t path;
+          currentPath_ = planner_.planPath(currentPose_, homePose2);
+          //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
+          if(planner_.isPathSafe(currentPath_) && currentPath_.path_length!=0){
+            std::cout<<"A path to homePose is returned.\n";
+            continue;
+          }
+        }
+      }
+    }
     /////////////////////////////// End student code ///////////////////////////////
 
     /////////////////////////   Create the status message    //////////////////////////

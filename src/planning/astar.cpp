@@ -87,16 +87,22 @@ robot_path_t search_for_path(pose_xyt_t start,
     }
 
     //std::cout<<"Out of the while loop"<<std::endl;
-
+    
+    int sparser = 5;
+    int i = 0;
     if(isDestinationReached(*cur, dest_node)){
       while(cur!=nullptr){
-        pose_xyt_t cur_pose;
-        Point<float> p = distances.cellToPose(cur->n.x, cur->n.y);
-        cur_pose.x = p.x;
-        cur_pose.y = p.y;
-        //cur_pose.theta = 0;
-        path.path.push_back(cur_pose);
-        //std::cout<<"x, y: "<<cur_pose.x <<" "<<cur_pose.y<<std::endl;
+          if(i==sparser){
+            pose_xyt_t cur_pose;
+            Point<float> p = distances.cellToPose(cur->n.x, cur->n.y);
+            cur_pose.x = p.x;
+            cur_pose.y = p.y;
+            //cur_pose.theta = 0;
+            path.path.push_back(cur_pose);
+            i = 0;
+            //std::cout<<"x, y: "<<cur_pose.x <<" "<<cur_pose.y<<std::endl;
+          }
+        i+=1;
         cur = cur->p;
       }
       std::reverse(path.path.begin(), path.path.end());
@@ -117,7 +123,7 @@ robot_path_t search_for_path(pose_xyt_t start,
       open_set.erase(it);
       delete *it;
     }
-    std::cout<<"destination reached, Path length: "<<path.path_length<<std::endl;
+    std::cout<<"Destination reached, Path length: "<<path.path_length<<std::endl;
 
     //std::cout<<(*iter)->n.x<<" "<<(*iter)->n.y<<" "<<(*iter)->f_score<<std::endl;
     return path;

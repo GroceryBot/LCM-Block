@@ -116,7 +116,6 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
       }
       goalPose.x/= frontiers[i].cells.size();
       goalPose.y/= frontiers[i].cells.size();
-      std::cout<<"Goal: "<<goalPose.x<<" "<<goalPose.y<<std::endl;
 
       pose_xyt_t goalPose2;
       goalPose2.x  = goalPose.x;
@@ -126,11 +125,16 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
         pose_xyt_t goalPose;
         goalPose.x = frontiers[i].cells[j].x;
         goalPose.y = frontiers[i].cells[j].y;
+        ///std::cout<<"Goal: "<<goalPose.x<<" "<<goalPose.y<<std::endl;
         pose_xyt_t goalPose2;
         goalPose2.x  = frontiers[i].cells[j].x;
         goalPose2.y  = frontiers[i].cells[j].y;
-        for (unsigned int m=0; m<50; ++m){
-          for (unsigned int n=0; n<50; ++n){
+        int l = 10;
+        for (int m=0; m<l; ++m){
+          for (int n=0; n<l; ++n){
+            goalPose2.x = goalPose.x + (m-l/2)*map.metersPerCell();
+            goalPose2.y = goalPose.y + (n-l/2)*map.metersPerCell();
+            //std::cout<<"Goal2: "<<goalPose2.x<<" "<<goalPose2.y<<std::endl;
             if(planner.isValidGoal(goalPose2)){
               //std::cout<<"Valid goal.\n";
               robot_path_t path;
@@ -141,8 +145,6 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
                 return path;
               }
             }
-            goalPose2.x = goalPose.x + (m-m/2);
-            goalPose2.y = goalPose.y + (n-n/2);
           }
         }
       }
