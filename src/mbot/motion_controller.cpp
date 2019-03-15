@@ -26,12 +26,12 @@
 #define MAX_ANGLE_TOLERANCE 0.025f
 
 double MAX_TRANS_TOLERANCE = 2.5;
-double THETA_P = 1;
-double THETA_I = 0.00;
-double THETA_D = 0.0;
-double X_P = 1;
+double THETA_P = 0.65;
+double THETA_I = 0.0;
+double THETA_D = 0.06;
+double X_P = 0.13;
 double X_I = 0.00;
-double X_D = 0.0;
+double X_D = 0.06;
 std::ofstream csv;
 
 class PIDController
