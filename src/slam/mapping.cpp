@@ -45,13 +45,13 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
         }
         D += 2 * dy;
     }
-    int val = map.logOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map));
-    if (val >= 127 || val + kHitOdds >= 127)
-        val = 127;
-    else
-        val += kHitOdds;
-    printf("PLOT LINE LOW\n");
-    map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
+    // int val = map.logOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map));
+    // if (val >= 127 || val + kHitOdds >= 127)
+    //     val = 127;
+    // else
+    //     val += kHitOdds;
+    // printf("PLOT LINE LOW\n");
+    // map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
 }
 void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds, float kHitOdds)
 {
@@ -81,13 +81,13 @@ void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, fl
         }
         D += 2 * dx;
     }
-    int val = map.logOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map));
-    if (val >= 127 || val + kHitOdds >= 127)
-        val = 127;
-    else
-        val += kHitOdds;
-    printf("PLOT LINE HIGH\n");
-    map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
+    // int val = map.logOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map));
+    // if (val >= 127 || val + kHitOdds >= 127)
+    //     val = 127;
+    // else
+    //     val += kHitOdds;
+    // printf("PLOT LINE HIGH\n");
+    // map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
 }
 
 float calculateX(float distance, float theta)
@@ -120,10 +120,22 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
             if (x0 > x1)
             {
                 plotLineLow(x1, y1, x0, y0, map, kMissOdds_, kHitOdds_);
+                int val = map.logOdds(floor(x1 * 20 + 100 - 1), floor(y1 * 20 + 100));
+                if (val >= 127 || val + kHitOdds_ >= 127)
+                    val = 127;
+                else
+                    val += kHitOdds_;
+                map.setLogOdds(floor(x1 * 20 + 100 - 1), floor(y1 * 20 + 100), val);
             }
             else
             {
                 plotLineLow(x0, y0, x1, y1, map, kMissOdds_, kHitOdds_);
+                int val = map.logOdds(floor(x1 * 20 + 100 + 1), floor(y1 * 20 + 100));
+                if (val >= 127 || val + kHitOdds_ >= 127)
+                    val = 127;
+                else
+                    val += kHitOdds_;
+                map.setLogOdds(floor(x1 * 20 + 100 + 1), floor(y1 * 20 + 100), val);
             }
         }
         else
@@ -131,10 +143,22 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
             if (y0 > y1)
             {
                 plotLineHigh(x1, y1, x0, y0, map, kMissOdds_, kHitOdds_);
+                int val = map.logOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100 - 1));
+                if (val >= 127 || val + kHitOdds_ >= 127)
+                    val = 127;
+                else
+                    val += kHitOdds_;
+                map.setLogOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100 - 1), val);
             }
             else
             {
                 plotLineHigh(x0, y0, x1, y1, map, kMissOdds_, kHitOdds_);
+                int val = map.logOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100 + 1));
+                if (val >= 127 || val + kHitOdds_ >= 127)
+                    val = 127;
+                else
+                    val += kHitOdds_;
+                map.setLogOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100 + 1), val);
             }
         }
         // int val = map.logOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100));
