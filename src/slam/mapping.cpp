@@ -11,11 +11,11 @@ Mapping::Mapping(float maxLaserDistance, int8_t hitOdds, int8_t missOdds)
 }
 int metersToCellX(float x, OccupancyGrid &map)
 {
-    return (x * map.cellsPerMeter()) + (map.widthInCells() / 2);
+    return floor(x * map.cellsPerMeter()) + (map.widthInCells() / 2);
 }
 int metersToCellY(float y, OccupancyGrid &map)
 {
-    return (y * map.cellsPerMeter()) + (map.heightInCells() / 2);
+    return floor(y * map.cellsPerMeter()) + (map.heightInCells() / 2);
 }
 void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds, float kHitOdds)
 {
@@ -135,12 +135,12 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
                 plotLineHigh(x0, y0, x1, y1, map, kMissOdds_, kHitOdds_);
             }
         }
-        int val = map.logOdds(x1 * 20 + 100, y1 * 20 + 100);
+        int val = map.logOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100));
         if (val >= 127 || val + kHitOdds_ >= 127)
             val = 127;
         else
             val += kHitOdds_;
-        map.setLogOdds(x1 * 20 + 100, y1 * 20 + 100, val);
+        map.setLogOdds(floor(x1 * 20 + 100), floor(y1 * 20 + 100), val);
     }
     last_pose = pose;
 }
