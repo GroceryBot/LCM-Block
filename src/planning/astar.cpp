@@ -19,7 +19,9 @@ robot_path_t search_for_path(pose_xyt_t start,
                              const SearchParams& params)
 {
     ////////////////// TODO: Implement your A* search here //////////////////////////
-    std::cout<<"search start (global): "<<start.x<<" "<<start.y<<" goal: "<<goal.x<<" "<<goal.y<<std::endl;
+    //std::cout<<"Astar start -- search start (global): "<<start.x<<" "<<start.y<<" goal: "<<goal.x<<" "<<goal.y<<std::endl;
+    //std::cout<<"Map INFO (w/h): "<<distances.widthInCells()<<" "<<distances.heightInCells()<<" "<<distances.widthInMeters()<<" "<<distances.heightInMeters()<<std::endl;
+    //std::cout<<"Origin: "<<distances.originInGlobalFrame().x<<" "<<distances.originInGlobalFrame().y<<std::endl;
     robot_path_t path;
     path.utime = start.utime;
     //First node in path
@@ -38,7 +40,7 @@ robot_path_t search_for_path(pose_xyt_t start,
     Node* start_node = new Node(start_point, nullptr,0);
     start_node->f_score =  calculateHscore(*start_node, dest_node, distances, params);
     open_set.insert(start_node);
-    std::cout<<"search start (Cell): "<<start_node->n.x<<" "<<start_node->n.y<<" goal: "<<dest_node.n.x<<" "<<dest_node.n.y<<std::endl;
+    //std::cout<<"search start (Cell): "<<start_node->n.x<<" "<<start_node->n.y<<" goal: "<<dest_node.n.x<<" "<<dest_node.n.y<<std::endl;
 
     pq.push(start_node);
     //visited_list.insert(start_node.n);
@@ -87,7 +89,6 @@ robot_path_t search_for_path(pose_xyt_t start,
     //std::cout<<"Out of the while loop"<<std::endl;
 
     if(isDestinationReached(*cur, dest_node)){
-      std::cout<<"destination reached!!\n";
       while(cur!=nullptr){
         pose_xyt_t cur_pose;
         Point<float> p = distances.cellToPose(cur->n.x, cur->n.y);
@@ -116,6 +117,8 @@ robot_path_t search_for_path(pose_xyt_t start,
       open_set.erase(it);
       delete *it;
     }
+    std::cout<<"destination reached, Path length: "<<path.path_length<<std::endl;
+
     //std::cout<<(*iter)->n.x<<" "<<(*iter)->n.y<<" "<<(*iter)->f_score<<std::endl;
     return path;
 }

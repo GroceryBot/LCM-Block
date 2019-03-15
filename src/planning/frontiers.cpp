@@ -99,26 +99,55 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
     *   - The cells along the frontier might not be in the configuration space of the robot, so you won't necessarily
     *       be able to drive straight to a frontier cell, but will need to drive somewhere close.
     */
+
+    //TODO: maybe need reorgnized frontier according to current pose. Right now it only return a valid path.
     robot_path_t emptyPath;
     emptyPath.utime = robotPose.utime;
     emptyPath.path_length = 0;
-    //planner.setMap(map);
+    std::cout<<"Map info (w,h): "<<map.widthInMeters()<<" "<<map.heightInMeters()<<" "<<map.heightInCells()<<" "<<map.widthInCells()<<std::endl;
     for(unsigned int i=0; i<frontiers.size(); i++){
+      /*
       pose_xyt_t goalPose;
-      //TODO: what is contained in fronter???
-      goalPose.x = frontiers[i].cells[0].x;
-      goalPose.y = frontiers[i].cells[0].y;
+      goalPose.x = 0;
+      goalPose.y = 0;
+      for(unsigned int j=0; j<frontiers[i].cells.size(); j++){
+        goalPose.x += frontiers[i].cells[j].x;
+        goalPose.y += frontiers[i].cells[j].y;
+      }
+      goalPose.x/= frontiers[i].cells.size();
+      goalPose.y/= frontiers[i].cells.size();
+      std::cout<<"Goal: "<<goalPose.x<<" "<<goalPose.y<<std::endl;
 
-      if(planner.isValidGoal(goalPose)){
-        robot_path_t path;
-        path = planner.planPath(robotPose, goalPose);
-        if(planner.isPathSafe(path)){
-          return path;
-          std::cout<<"A path to frontier is returned.\n";
+      pose_xyt_t goalPose2;
+      goalPose2.x  = goalPose.x;
+      goalPose2.y  = goalPose.y;
+      */
+      for(unsigned int j=0; j<frontiers[i].cells.size(); j++){
+        pose_xyt_t goalPose;
+        goalPose.x = frontiers[i].cells[j].x;
+        goalPose.y = frontiers[i].cells[j].y;
+        pose_xyt_t goalPose2;
+        goalPose2.x  = frontiers[i].cells[j].x;
+        goalPose2.y  = frontiers[i].cells[j].y;
+        for (unsigned int m=0; m<50; ++m){
+          for (unsigned int n=0; n<50; ++n){
+            if(planner.isValidGoal(goalPose2)){
+              //std::cout<<"Valid goal.\n";
+              robot_path_t path;
+              path = planner.planPath(robotPose, goalPose2);
+              //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
+              if(planner.isPathSafe(path) && path.path_length!=0){
+                std::cout<<"A path to frontier is returned.\n";
+                return path;
+              }
+            }
+            goalPose2.x = goalPose.x + (m-m/2);
+            goalPose2.y = goalPose.y + (n-n/2);
+          }
         }
       }
     }
-
+    std::cout<<"Empty Path returned.\n";
     return emptyPath;
 }
 

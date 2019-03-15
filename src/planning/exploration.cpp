@@ -65,7 +65,7 @@ bool Exploration::exploreEnvironment()
         // Otherwise wait a bit for data to arrive
         else
         {
-            usleep(10000);
+            usleep(1000);
         }
     }
 
@@ -93,7 +93,12 @@ void Exploration::handlePose(const lcm::ReceiveBuffer* rbuf, const std::string& 
 void Exploration::handleConfirmation(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const message_received_t* confirm)
 {
     std::lock_guard<std::mutex> autoLock(dataLock_);
-    if(confirm->channel == CONTROLLER_PATH_CHANNEL && confirm->creation_time == most_recent_path_time) pathReceived_ = true;
+    std::cout<<"Control path confirmation: "<<confirm->channel <<" "<<CONTROLLER_PATH_CHANNEL" "<< confirm->creation_time<<" "<<most_recent_path_time<<std::endl;
+    std::cout<<(confirm->channel == CONTROLLER_PATH_CHANNEL && confirm->creation_time == most_recent_path_time)<<std::endl;
+    if(confirm->channel == CONTROLLER_PATH_CHANNEL && confirm->creation_time == most_recent_path_time){
+      pathReceived_ = true;
+      std::cout<<"TRUE\n";
+    }
 }
 
 bool Exploration::isReadyToUpdate(void)
@@ -152,13 +157,16 @@ void Exploration::executeStateMachine(void)
         switch(state_)
         {
             case exploration_status_t::STATE_INITIALIZING:
+                std::cout<<"Initializing.\n";
                 nextState = executeInitializing();
                 break;
             case exploration_status_t::STATE_EXPLORING_MAP:
+                std::cout<<"Exploring.\n";
                 nextState = executeExploringMap(stateChanged);
                 break;
 
             case exploration_status_t::STATE_RETURNING_HOME:
+                std::cout<<"Returning.\n";
                 nextState = executeReturningHome(stateChanged);
                 break;
 
@@ -170,7 +178,6 @@ void Exploration::executeStateMachine(void)
                 nextState = executeFailed(stateChanged);
                 break;
         }
-
         stateChanged = nextState != state_;
         state_ = nextState;
 
@@ -221,7 +228,7 @@ int8_t Exploration::executeInitializing(void)
     status.state = exploration_status_t::STATE_INITIALIZING;
     status.status = exploration_status_t::STATUS_COMPLETE;
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
-
+    most_recent_path_time = 0;
     return exploration_status_t::STATE_EXPLORING_MAP;
 }
 
@@ -242,9 +249,12 @@ int8_t Exploration::executeExploringMap(bool initialize)
     *           explored more of the map.
     *       -- You will likely be able to see the frontier before actually reaching the end of the path leading to it.
     */
+    planner_.setMap(currentMap_);
     frontiers_ = find_map_frontiers(currentMap_, currentPose_);
+    std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
     currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
-
+    most_recent_path_time = currentPath_.utime;
+    std::cout<<currentPath_.utime<<std::endl;
 
     /////////////////////////////// End student code ///////////////////////////////
 
@@ -268,6 +278,7 @@ int8_t Exploration::executeExploringMap(bool initialize)
     // Otherwise, there are frontiers, but no valid path exists, so exploration has failed
     else
     {
+        //std::cout<<"Wait one iteration.\n";
         status.status = exploration_status_t::STATUS_FAILED;
     }
 
@@ -304,6 +315,7 @@ int8_t Exploration::executeReturningHome(bool initialize)
     *       (1) dist(currentPose_, targetPose_) < kReachedPositionThreshold  :  reached the home pose
     *       (2) currentPath_.path_length > 1  :  currently following a path to the home pose
     */
+    planner_.setMap(currentMap_);
     currentPath_ = planner_.planPath(currentPose_, homePose_);
 
     /////////////////////////////// End student code ///////////////////////////////

@@ -18,7 +18,7 @@ void ObstacleDistanceGrid::setDistances(const OccupancyGrid& map)
     ///////////// TODO: Implement an algorithm to mark the distance to the nearest obstacle for every cell in the map.
     for(int i=0; i<width_; i++){
       for(int j=0; j<height_; j++){
-        //std::cout<<findDistance(i,j, map) * metersPerCell_ <<std::endl;
+        //std::cout<<i<<" "<<j<<" "<<findDistance(i,j, map) * metersPerCell_ <<std::endl;
         distance(i,j) = findDistance(i,j, map) * metersPerCell_ ;
       }
     }
@@ -29,20 +29,22 @@ float ObstacleDistanceGrid::findDistance(int x, int y, const OccupancyGrid& map)
   // this can probably be heavily optimized by keeping a set of occupied cells
   //Note: the distance is in grid scale (not meters)
   //std::cout<<"x, y: "<<x<<" "<<y<<std::endl;
+  if (map.logOdds(x,y) == 0) return 0; //Cell unknown
+
   float min_distance = std::numeric_limits<float>::max();
   for (int i = 0; i < map.widthInCells(); ++i) {
     for (int j = 0; j < map.heightInCells(); ++j) {
       //std::cout<<"i, j: "<<i<<" "<<j<<std::endl;
-      if (map.logOdds(i, j) >= 0) { //occupied
+      if (map.logOdds(i, j) >= 50) { //occupied
         float temp_distance = sqrt(pow(x - i, 2) + pow(y - j, 2));
         if (temp_distance < min_distance)
         {
-          //std::cout<<min_distance<<" "<<temp_distance<<"\n";
           min_distance = temp_distance;
         }
       }
     }
   }
+  //std::cout<<x<<" "<<y<<" "<<min_distance * metersPerCell_<<std::endl;
   return min_distance;
 }
 
