@@ -50,6 +50,7 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
         val = 127;
     else
         val += kHitOdds;
+    printf("PLOT LINE LOW\n");
     map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
 }
 void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds, float kHitOdds)
@@ -85,6 +86,7 @@ void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, fl
         val = 127;
     else
         val += kHitOdds;
+    printf("PLOT LINE HIGH\n");
     map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
 }
 
