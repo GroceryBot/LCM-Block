@@ -106,12 +106,12 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
                 plotLineHigh(x0, y0, x1, y1, map, kMissOdds_);
             }
         }
-        int val = map.logOdds(metersToCellX(x1), metersToCellY(y1));
+        int val = map.logOdds(metersToCellX(x1, map), metersToCellY(y1, map));
         if (val >= 127 || val + kHitOdds_ >= 127)
             val = 127;
         else 
             val += kHitOdds_;
-        map.setLogOdds(metersToCellX(x1), metetrsToCellY(y1));
+        map.setLogOdds(metersToCellX(x1, map), metersToCellY(y1, map), val);
 
     }
     last_pose = pose;
