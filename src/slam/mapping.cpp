@@ -12,6 +12,62 @@ Mapping::Mapping(float maxLaserDistance, int8_t hitOdds, int8_t missOdds)
 , kMissOdds_(missOdds)
 {
 }
+int metersToCellX(float x, OccupancyGrid &map) {
+    return (x * map.cellsPerMeter()) + (map.widthInCells() / 2);
+}
+int metersToCellY(float y, OccupancyGrid &map) {
+    return (y * map.cellsPerMeter()) + (map.heightInCells() / 2);
+}
+void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds) {
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    float yi = 1;
+    if (dy < 0) {
+        yi = -1;
+        dy = -dy;
+    }
+    float D = 2 * dy - dx;
+    float cur_y = y0;
+    float cur_x = x0;
+    for (; cur_x < x1; cur_x += 0.025) {
+        int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
+        if (val <= -127 || val - kMissOdds <= -127)
+            val = -127;
+        else 
+            val -= kMissOdds;
+        map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
+        if (D > 0) {
+            cur_y += yi * 0.025;
+            D -= 2 * dx;
+        }
+        D += 2 * dy;
+    }
+}
+void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds) {
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    float xi = 1;
+    if (dx < 0) {
+        xi = -1;
+        dx = -dx;
+    }
+    float D = 2 * dx - dy;
+    float cur_y = y0;
+    float cur_x = x0;
+    for (; cur_y < y1; cur_y += 0.025) {
+        int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
+        if (val <= -127 || val - kMissOdds <= -127)
+            val = -127;
+        else 
+            val -= kMissOdds;
+        map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
+        if (D > 0) {
+            cur_x += xi * 0.025;
+            D -= 2 * dy;
+        }
+        D += 2 * dx;
+    }
+}
 
 float calculateX(float distance, float theta) {
 	return distance * cos(theta);
@@ -19,7 +75,6 @@ float calculateX(float distance, float theta) {
 float calculateY(float distance, float theta) {
 	return distance * sin(theta);
 }
-
 void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGrid& map)
 {
     //////////////// TODO: Implement your occupancy grid algorithm here ///////////////////////
@@ -30,25 +85,34 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
     	return;
     }
     MovingLaserScan ml_scan(scan, last_pose, pose);
-    for (int i = 0; i < ml_scan.size(); ++i) {
-        float x = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
-        float y = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta)) * 20 + 100;
-        int val = map.logOdds(floor(x), floor(y)) + kHitOdds_;
-        if (val > 127) val = 127;
-        map.setLogOdds(floor(x), floor(y), val);
-
-    	for (float dist_ = 0; dist_ < ml_scan[i].range; dist_ += 0.05) {
-    		float x_intermediate = (ml_scan[i].origin.x + calculateX(dist_, ml_scan[i].theta)) * 20 + 100;
-    		float y_intermediate = (ml_scan[i].origin.y + calculateY(dist_, ml_scan[i].theta)) * 20 + 100;
-            val = map.logOdds(floor(x_intermediate), floor(y_intermediate)) - kMissOdds_;
-    		printf("val %d\n", val);
-    		printf("kMissOdds %d\n", kMissOdds_);
-    		if (val < -127) val = -127;
-            if (!(floor(x) == floor(x_intermediate) && floor(y) == floor(y_intermediate))) 
-    		  map.setLogOdds(floor(x_intermediate), floor(y_intermediate), val);
-    	}
+    for (unsigned int i = 0; i < ml_scan.size(); ++i) {
+        float x0 = ml_scan[i].origin.x;
+        float y0 = ml_scan[i].origin.y;
+        float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
+        float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
+        if (abs(y1 - y0) < abs(x1 - x0)) {
+            if (x0 > x1) {
+                plotLineLow(x1, y1, x0, y0, map, kMissOdds_);
+            }
+            else {
+                plotLineLow(x0, y0, x1, y1, map, kMissOdds_);
+            }
+        }
+        else {
+            if (y0 > y1) {
+                plotLineHigh(x1, y1, x0, y0, map, kMissOdds_);
+            }
+            else {
+                plotLineHigh(x0, y0, x1, y1, map, kMissOdds_);
+            }
+        }
+        int val = map.logOdds(x1 * 20 + 100, y1 * 20 + 100);
+        if (val >= 127 || val + kHitOdds_ >= 127)
+            val = 127;
+        else 
+            val += kHitOdds_;
+        map.setLogOdds(x1*20 + 100, y1*20 + 100, val);
 
     }
     last_pose = pose;
-
 }

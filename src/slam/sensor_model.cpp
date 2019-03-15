@@ -3,63 +3,67 @@
 #include <slam/occupancy_grid.hpp>
 #include <lcmtypes/particle_t.hpp>
 #include <common/grid_utils.hpp>
-#include <limits>
 
 
 SensorModel::SensorModel(void)
 {
     ///////// TODO: Handle any initialization needed for your sensor model
-    const float  max_lidar = 8;
 }
 
+void SensorModel::generateOccupied(const OccupancyGrid& map) {
+    occupied.clear();
+    for (int i = 0; i < map.widthInCells(); ++i) {
+        for (int j = 0; j < map.heightInCells(); ++j) {
+            if (map.logOdds(i, j) > 126) {
+                occupied.push_back({i, j});
+            }
+        }
+    }
+}
+
+float distance(float x1, float y1, float x2, float y2) {
+    return sqrt((x2 - x1)*(x2 - x1) + (y2 - y1) * (y2 - y1));
+}
 
 double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, const OccupancyGrid& map)
 {
     ///////////// TODO: Implement your sensor model for calculating the likelihood of a particle given a laser scan //////////
-  // implemented according to page 172 of probabilistic robotics
-    double q = 1.0;
+    if (!init) {
+        generateOccupied(map);
+        init = true;
+    }
     MovingLaserScan ml_scan(scan, sample.parent_pose, sample.pose);
-    for (int i = 0; i < ml_scan.size(); ++i) {
-      // if (ml_scan[i].range < 5){ turns out we don't need this, talked to some other people in the class
+    float q = 0.0;
+    // float total = 0.0;
+    for (unsigned int i = 0; i < ml_scan.size(); ++i) {
         float theta = ml_scan[i].theta;
         float range = ml_scan[i].range;
-        float x = ml_scan[i].origin.x + range*cos(theta);
-        float y = ml_scan[i].origin.y + range*sin(theta);
-        float dist = findDistance(x, y, map);
-        double Z_HIT_CONST = 1.0; //needs to be tuned
-        double STDEV_CONST = 1.0; // needs to be tuned
-        q *= Z_HIT_CONST * prob_normal_dist(dist, STDEV_CONST);
+        int x = (ml_scan[i].origin.x + range*cos(theta))*20+100;
+        int y = (ml_scan[i].origin.y + range*sin(theta))*20+100;
+        //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
+        //TODO: should be tuned for better result
+        double min_distance = 1000;
+        // printf("BBBBBBBB=%d\n", occupied.size());
+        for (unsigned int k = 0; k < occupied.size(); ++k) {
+            float dist = distance(x, y, occupied[k].first, occupied[k].second);
+            if (dist < min_distance) {
+                min_distance = dist;
+            }
+            if (min_distance == 0) break;
+        }
+        if (min_distance <= 0.1) {
+            min_distance = 0.5;
+        }
+        q += 1.0/(min_distance);
+
+        // if(map.logOdds(x,y)>30){
+        //   hits += 1.0;
         // }
+        // else if (map.logOdds(x + 1,y)>30 || map.logOdds(x - 1,y)>30 || map.logOdds(x,y + 1)>30 ||map.logOdds(x,y - 1)>30 || map.logOdds(x+1,y+1)>30
+        //     || map.logOdds(x+1,y-1)>30 ||map.logOdds(x-1,y+1)>30 || map.logOdds(x -1,y-1)>30) {
+        //     hits += 0.5;
+        // }
+        // total += 1.0;
     }
     return q;
-}
-
-double findDistance(float x, float y, const OccupancyGrid& map) {
-  // this can probably be heavily optimized by keeping a set of occupied cells
-  double min_distance = std::numeric_limits<float>::max();
-  for (int i = 0; i < map.widthInCells(); ++i) {
-    for (int j = 0; j < map.heightInCells(); ++j) {
-      if (map.logOdds(i, j) > 125) { //occupied
-        double temp_distance = distance(x * map.cellsPerMeter() + 100, y * map.cellsPerMeter() + 100, i, j);
-        if (temp_distance < min_distance)
-        {
-          min_distance = temp_distance;
-        }
-      }
-    }
-  }
-  return min_distance;
-}
-
-double prob_normal_dist(double value, double stdev) {
-  // used formula from https://stattrek.com/probability-distributions/normal.aspx
-  const double pi = 3.14159265358979323846;
-  const double e = 2.71828;
-  const double mean = 0.0;
-  double exp = (-pow((value - mean), 2)) / (2 * pow(stdev, 2));
-  return (1.0/(stdev * sqrt(2.0*pi))) * pow(e, exp);
-}
-
-double distance(double x1, double y1, double x2, double y2) {
-  return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 }
