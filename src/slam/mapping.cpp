@@ -45,12 +45,12 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
         }
         D += 2 * dy;
     }
-    int val = map.logOdds(metersToCellX(cur_x + 0.025, map), metersToCellY(cur_y + 0.025, map));
+    int val = map.logOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map));
     if (val >= 127 || val + kHitOdds >= 127)
         val = 127;
     else
         val += kHitOdds;
-    map.setLogOdds(metersToCellX(cur_x + 0.025, map), metersToCellY(cur_y + 0.025, map), val);
+    map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
 }
 void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds, float kHitOdds)
 {
@@ -80,12 +80,12 @@ void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, fl
         }
         D += 2 * dx;
     }
-    int val = map.logOdds(metersToCellX(cur_x + 0.025, map), metersToCellY(cur_y + 0.025, map));
+    int val = map.logOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map));
     if (val >= 127 || val + kHitOdds >= 127)
         val = 127;
     else
         val += kHitOdds;
-    map.setLogOdds(metersToCellX(cur_x + 0.025, map), metersToCellY(cur_y + 0.025, map), val);
+    map.setLogOdds(metersToCellX(cur_x + 0.05, map), metersToCellY(cur_y + 0.05, map), val);
 }
 
 float calculateX(float distance, float theta)
