@@ -43,7 +43,6 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
         //std::cout<<ml_scan[i].origin.x<<" "<<ml_scan[i].origin.y<<" "<<x<<" "<<y<<std::endl;
         //TODO: should be tuned for better result
         double min_distance = 1000.0;
-        // printf("BBBBBBBB=%d\n", occupied.size());
         for (unsigned int k = 0; k < occupied.size(); ++k) {
             float dist = distance(x, y, occupied[k].first, occupied[k].second);
             if (dist < min_distance) {

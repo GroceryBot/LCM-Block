@@ -174,7 +174,16 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &
   //return pose;
   // if (max_weight < 0.2)
   // return pose;
-  float top_percent = min_weight + ((max_weight - min_weight) * 0.9);
+  float top_percent = min_weight + ((max_weight - min_weight) * 0.7);
+
+  float s = 0.0f;
+  for (unsigned int i = 0; i < posterior.size(); i++)
+  {
+    if (posterior_[i].weight > top_percent) {
+      s += posterior_[i].weight;
+    }
+  }
+
   x = 0;
   y = 0;
   theta = 0;
@@ -182,6 +191,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &
   {
     if (posterior[i].weight > top_percent)
     {
+      posterior_[i].weight /= s;
       if (std::abs(posterior[i].pose.x) < 5 && std::abs(posterior[i].pose.y) < 5)
       {
         x += posterior[i].pose.x * posterior[i].weight;
