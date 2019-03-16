@@ -124,7 +124,7 @@ private:
     int8_t executeFailed(bool initialize);
 
     /////////// TODO: Add any additional methods you might need here //////////////
-
+    robot_path_t findPathHome(void);
     /////////////////////////// End student code ///////////////////////////////
 };
 

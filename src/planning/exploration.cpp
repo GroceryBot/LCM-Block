@@ -229,7 +229,8 @@ int8_t Exploration::executeInitializing(void)
     status.status = exploration_status_t::STATUS_COMPLETE;
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
     most_recent_path_time = 0;
-    currentPath_.path_length=0;
+    currentPath_.path_length = 0;
+    currentTarget_ = currentPose_;
     return exploration_status_t::STATE_EXPLORING_MAP;
 }
 
@@ -252,12 +253,13 @@ int8_t Exploration::executeExploringMap(bool initialize)
     */
     planner_.setMap(currentMap_);
     frontiers_ = find_map_frontiers(currentMap_, currentPose_);
-    if(frontiers_.size()!=0){
+    if(frontiers_.size()>0){
       std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
       if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0
-          || abs(currentPose_.x-currentTarget_.x) + abs(currentPose_.y-currentTarget_.y)<0.05 ){
+          || sqrt((currentPose_.x-currentTarget_.x)*(currentPose_.x-currentTarget_.x) + (currentPose_.y-currentTarget_.y)*(currentPose_.y-currentTarget_.y))<0.1){
         currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
         currentTarget_ = currentPath_.path[currentPath_.path_length-1];
+        //std::cout<<"Target: "<<currentTarget_.x<<" "<<currentTarget_.y<<std::endl;
       }
     }
     most_recent_path_time = currentPath_.utime;
@@ -313,6 +315,32 @@ int8_t Exploration::executeExploringMap(bool initialize)
 }
 
 
+robot_path_t Exploration::findPathHome(void){
+  robot_path_t path;
+  path.path_length = 0;
+  pose_xyt_t homePose2;
+  int l = 10;
+  for (int m=0; m<l; ++m){
+    for (int n=0; n<l; ++n){
+      homePose2.x = homePose_.x + (m-l/2)*currentMap_.metersPerCell();
+      homePose2.y = homePose_.y + (n-l/2)*currentMap_.metersPerCell();
+      std::cout<<"HOME: "<<homePose2.x <<" "<<homePose2.y<<std::endl;
+      if(planner_.isValidGoal(homePose2)){
+        std::cout<<"Valid Home\n.";
+        path = planner_.planPath(currentPose_, homePose2);
+        //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
+        if(planner_.isPathSafe(path) && path.path_length!=0){
+          std::cout<<"A path to homePose is returned.\n";
+          return path;
+        }
+      }
+    }
+  }
+  std::cout<<"Empty path to home.\n";
+  return path;
+}
+
+
 int8_t Exploration::executeReturningHome(bool initialize)
 {
     //////////////////////// TODO: Implement your method for returning to the home pose ///////////////////////////
@@ -322,26 +350,8 @@ int8_t Exploration::executeReturningHome(bool initialize)
     *       (1) dist(currentPose_, targetPose_) < kReachedPositionThreshold  :  reached the home pose
     *       (2) currentPath_.path_length > 1  :  currently following a path to the home pose
     */
-    std::cout<<"Home pose: "<<homePose_.x<<" "<<homePose_.y<<std::endl;
     planner_.setMap(currentMap_);
-    //currentPath_ = planner_.planPath(currentPose_, homePose_);
-    pose_xyt_t homePose2;
-    int l = 10;
-    for (int m=0; m<l; ++m){
-      for (int n=0; n<l; ++n){
-        homePose2.x = homePose_.x + (m-l/2)*currentMap_.metersPerCell();
-        homePose2.y = homePose_.y + (n-l/2)*currentMap_.metersPerCell();
-        if(planner_.isValidGoal(homePose2)){
-          robot_path_t path;
-          currentPath_ = planner_.planPath(currentPose_, homePose2);
-          //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
-          if(planner_.isPathSafe(currentPath_) && currentPath_.path_length!=0){
-            std::cout<<"A path to homePose is returned.\n";
-            continue;
-          }
-        }
-      }
-    }
+    currentPath_ = findPathHome();
     /////////////////////////////// End student code ///////////////////////////////
 
     /////////////////////////   Create the status message    //////////////////////////

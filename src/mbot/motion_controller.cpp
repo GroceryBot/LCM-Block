@@ -491,9 +491,9 @@ class MotionController
         odomToGlobalFrame_.x = globalPose.x - odomAtTime.x;
         odomToGlobalFrame_.y = globalPose.y - odomAtTime.y;
         odomToGlobalFrame_.theta = -odomAtTime.theta + globalPose.theta;
-        std::cout << "ODOMETRY OFFSET" << std::endl;
-        std::cout << "X: " << odomToGlobalFrame_.x << " Y: " << odomToGlobalFrame_.y << " TH: " << odomToGlobalFrame_.theta << std::endl;
-        std::cout << "_____________" << std::endl;
+        //std::cout << "ODOMETRY OFFSET" << std::endl;
+        //std::cout << "X: " << odomToGlobalFrame_.x << " Y: " << odomToGlobalFrame_.y << " TH: " << odomToGlobalFrame_.theta << std::endl;
+        //std::cout << "_____________" << std::endl;
     }
 
     pose_xyt_t currentPose(void)
