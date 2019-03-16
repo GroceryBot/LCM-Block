@@ -94,18 +94,13 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
         started = true;
         return;
     }
-    // MovingLaserScan ml_scan(scan, last_pose, pose);
-    // for (unsigned int i = 0; i < ml_scan.size(); ++i) {
-    for (unsigned int i = 0; i < scan.num_ranges; ++i)
+    MovingLaserScan ml_scan(scan, last_pose, pose);
+    for (unsigned int i = 0; i < ml_scan.size(); ++i)
     {
-        // float x0 = ml_scan[i].origin.x;
-        // float y0 = ml_scan[i].origin.y;
-        float x0 = pose.x;
-        float y0 = pose.y;
-        // float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
-        // float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
-        float x1 = (pose.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
-        float y1 = (pose.y + calculateY(scan.ranges[i], pose.theta + scan.thetas[i]));
+        float x0 = ml_scan[i].origin.x;
+        float y0 = ml_scan[i].origin.y;
+        float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
+        float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
         if (std::abs(y1 - y0) < std::abs(x1 - x0))
         {
             if (x0 > x1)
