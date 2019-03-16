@@ -435,8 +435,8 @@ class MotionController
 
     bool haveReachedTarget(void)
     {
-        const float kPosTolerance = 0.025f;
-        const float kFinalPosTolerance = 0.025f;
+        const float kPosTolerance = 0.1f;
+        const float kFinalPosTolerance = 0.1f;
 
         //tolerance for intermediate waypoints can be more lenient
         float tolerance = (targets_.size() == 1) ? kFinalPosTolerance : kPosTolerance;
