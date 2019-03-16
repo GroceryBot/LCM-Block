@@ -95,7 +95,7 @@ int BotGui::onMouseEvent(vx_layer_t *layer,
         std::cout << "Sending controller path to " << target.x << ',' << target.y << " in odometry frame\n";
 
         robot_path_t path;
-        path.path_length = 2;
+        path.path_length = 1;
         // path.path.push_back(odomPose);
         path.path.push_back(target);
         lcmInstance_->publish(CONTROLLER_PATH_CHANNEL, &path);
