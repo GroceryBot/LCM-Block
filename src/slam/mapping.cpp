@@ -29,15 +29,15 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
     float D = 2 * dy - dx;
     float cur_y = y0;
     float cur_x = x0;
-    for (; cur_x < x1; cur_x += 0.025) {
+    for (; cur_x < x1; cur_x += 0.05) {
         int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
         if (val <= -127 || val - kMissOdds <= -127)
             val = -127;
-        else 
+        else
             val -= kMissOdds;
         map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
         if (D > 0) {
-            cur_y += yi * 0.025;
+            cur_y += yi * 0.05;
             D -= 2 * dx;
         }
         D += 2 * dy;
@@ -54,15 +54,15 @@ void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, fl
     float D = 2 * dx - dy;
     float cur_y = y0;
     float cur_x = x0;
-    for (; cur_y < y1; cur_y += 0.025) {
+    for (; cur_y < y1; cur_y += 0.05) {
         int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
         if (val <= -127 || val - kMissOdds <= -127)
             val = -127;
-        else 
+        else
             val -= kMissOdds;
         map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
         if (D > 0) {
-            cur_x += xi * 0.025;
+            cur_x += xi * 0.05;
             D -= 2 * dy;
         }
         D += 2 * dx;
@@ -109,7 +109,7 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
         int val = map.logOdds(metersToCellX(x1, map), metersToCellY(y1, map));
         if (val >= 127 || val + kHitOdds_ >= 127)
             val = 127;
-        else 
+        else
             val += kHitOdds_;
         map.setLogOdds(metersToCellX(x1, map), metersToCellY(y1, map), val);
 
