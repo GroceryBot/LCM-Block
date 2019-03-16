@@ -5,63 +5,70 @@
 #include <numeric>
 #include <math.h>
 
-
 Mapping::Mapping(float maxLaserDistance, int8_t hitOdds, int8_t missOdds)
-: kMaxLaserDistance_(maxLaserDistance)
-, kHitOdds_(hitOdds)
-, kMissOdds_(missOdds)
+    : kMaxLaserDistance_(maxLaserDistance), kHitOdds_(hitOdds), kMissOdds_(missOdds)
 {
 }
-int metersToCellX(float x, OccupancyGrid &map) {
+int metersToCellX(float x, OccupancyGrid &map)
+{
     return std::floor(x * map.cellsPerMeter()) + (map.widthInCells() / 2);
 }
-int metersToCellY(float y, OccupancyGrid &map) {
+int metersToCellY(float y, OccupancyGrid &map)
+{
     return std::floor(y * map.cellsPerMeter()) + (map.heightInCells() / 2);
 }
-void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds) {
+void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds)
+{
     float dx = x1 - x0;
     float dy = y1 - y0;
     float yi = 1;
-    if (dy < 0) {
+    if (dy < 0)
+    {
         yi = -1;
         dy = -dy;
     }
     float D = 2 * dy - dx;
     float cur_y = y0;
     float cur_x = x0;
-    for (; cur_x < x1; cur_x += 0.05) {
+    for (; cur_x < x1; cur_x += 0.05)
+    {
         int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
         if (val <= -127 || val - kMissOdds <= -127)
             val = -127;
         else
             val -= kMissOdds;
         map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
-        if (D > 0) {
+        if (D > 0)
+        {
             cur_y += yi * 0.05;
             D -= 2 * dx;
         }
         D += 2 * dy;
     }
 }
-void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds) {
+void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds)
+{
     float dx = x1 - x0;
     float dy = y1 - y0;
     float xi = 1;
-    if (dx < 0) {
+    if (dx < 0)
+    {
         xi = -1;
         dx = -dx;
     }
     float D = 2 * dx - dy;
     float cur_y = y0;
     float cur_x = x0;
-    for (; cur_y < y1; cur_y += 0.05) {
+    for (; cur_y < y1; cur_y += 0.05)
+    {
         int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
         if (val <= -127 || val - kMissOdds <= -127)
             val = -127;
         else
             val -= kMissOdds;
         map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
-        if (D > 0) {
+        if (D > 0)
+        {
             cur_x += xi * 0.05;
             D -= 2 * dy;
         }
@@ -69,40 +76,55 @@ void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, fl
     }
 }
 
-float calculateX(float distance, float theta) {
-	return distance * cos(theta);
+float calculateX(float distance, float theta)
+{
+    return distance * cos(theta);
 }
-float calculateY(float distance, float theta) {
-	return distance * sin(theta);
+float calculateY(float distance, float theta)
+{
+    return distance * sin(theta);
 }
-void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGrid& map)
+void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGrid &map)
 {
     //////////////// TODO: Implement your occupancy grid algorithm here ///////////////////////
-    if (!started) {
-    	map.reset();
-    	last_pose = pose;
-    	started = true;
-    	return;
+    if (!started)
+    {
+        map.reset();
+        last_pose = pose;
+        started = true;
+        return;
     }
-    MovingLaserScan ml_scan(scan, last_pose, pose);
-    for (unsigned int i = 0; i < ml_scan.size(); ++i) {
-        float x0 = ml_scan[i].origin.x;
-        float y0 = ml_scan[i].origin.y;
-        float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
-        float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
-        if (std::abs(y1 - y0) < std::abs(x1 - x0)) {
-            if (x0 > x1) {
+    // MovingLaserScan ml_scan(scan, last_pose, pose);
+    // for (unsigned int i = 0; i < ml_scan.size(); ++i) {
+    for (unsigned int i = 0; i < scan.num_ranges; ++i)
+    {
+        // float x0 = ml_scan[i].origin.x;
+        // float y0 = ml_scan[i].origin.y;
+        float x0 = pose.x;
+        float y0 = pose.y;
+        // float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
+        // float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
+        float x1 = (pose.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
+        float y1 = (pose.y + calculateY(scan.ranges[i], pose.theta + scan.thetas[i]));
+        if (std::abs(y1 - y0) < std::abs(x1 - x0))
+        {
+            if (x0 > x1)
+            {
                 plotLineLow(x1, y1, x0, y0, map, kMissOdds_);
             }
-            else {
+            else
+            {
                 plotLineLow(x0, y0, x1, y1, map, kMissOdds_);
             }
         }
-        else {
-            if (y0 > y1) {
+        else
+        {
+            if (y0 > y1)
+            {
                 plotLineHigh(x1, y1, x0, y0, map, kMissOdds_);
             }
-            else {
+            else
+            {
                 plotLineHigh(x0, y0, x1, y1, map, kMissOdds_);
             }
         }
@@ -112,7 +134,6 @@ void Mapping::updateMap(const lidar_t& scan, const pose_xyt_t& pose, OccupancyGr
         else
             val += kHitOdds_;
         map.setLogOdds(metersToCellX(x1, map), metersToCellY(y1, map), val);
-
     }
     last_pose = pose;
 }
