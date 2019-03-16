@@ -58,11 +58,11 @@ private:
     ////////// TODO: Add private member variables needed for you implementation ///////////////////
 
     //TODO: these member variables should be further tuned
-  const float val = 0.02;
+  const float val = 0.5;
   const float alpha1 = val;
   const float alpha2 = val;
-  const float alpha3 = val;
-  const float alpha4 = val;
+  const float alpha3 = 1;
+  const float alpha4 = 1;
   const float alpha5 = val;
   const float alpha6 = val;
   float rot1_var;

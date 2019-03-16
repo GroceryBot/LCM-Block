@@ -78,7 +78,7 @@ std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
 {
     //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
     std::default_random_engine generator;
-    std::normal_distribution<double> distribution(0.0,0.007);
+    std::normal_distribution<double> distribution(0.0,0.01);
     std::normal_distribution<double> distribution_theta(0.0,0.002);
 
     std::vector<particle_t> prior;
@@ -165,7 +165,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t>& 
     pose.y = y;
     pose.theta = theta;
     std::cout<<"Estimated pose weight: "<< max_weight<<std::endl;
-    return pose;
+    //return pose;
     // if (max_weight < 0.2)
     // return pose;
     x = 0; y = 0; theta = 0;

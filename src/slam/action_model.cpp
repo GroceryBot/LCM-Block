@@ -16,6 +16,7 @@ float sample_normal_dist(const float bsquared)
   float HIGH = sqrt(std::abs(bsquared));
   std::default_random_engine generator;
   std::normal_distribution<double> distribution(0, (HIGH + LO) / 2.0);
+  // return 0;
   return distribution(generator);
   // float retval = 0;
   // for(int i = 0; i < 12; ++i) {
@@ -30,6 +31,7 @@ float sample_normal_dist_theta(const float bsquared)
   float HIGH = sqrt(std::abs(bsquared));
   std::default_random_engine generator;
   std::normal_distribution<double> distribution(0, (HIGH + LO) / 2.0);
+  // return 0;
   return distribution(generator);
   // float retval = 0;
   // for(int i = 0; i < 12; ++i) {
@@ -92,8 +94,8 @@ particle_t ActionModel::applyAction(const particle_t& sample)
     new_pose.x = pose.x + del_trans_hat*cos(pose.theta + del_rot1_hat);
     new_pose.y = pose.y + del_trans_hat*sin(pose.theta + del_rot1_hat);
     new_pose.theta = pose.theta + del_rot1_hat + del_rot2_hat;
-    new_pose.utime = sample.pose.utime;
-    // new_pose.utime = lastPose[0].utime;
+    // new_pose.utime = sample.pose.utime;
+    new_pose.utime = lastPose_[0].utime;
     new_sample.pose = new_pose;
 
     return new_sample;
