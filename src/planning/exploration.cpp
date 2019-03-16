@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <cassert>
 
-const float kReachedPositionThreshold = 0.1f;  // must get within this distance of a position for it to be explored
+const float kReachedPositionThreshold = 1.0f;  // must get within this distance of a position for it to be explored
 
 // Define an equality operator for poses to allow direct comparison of two poses
 bool operator==(const pose_xyt_t& lhs, const pose_xyt_t& rhs)
@@ -47,7 +47,7 @@ Exploration::Exploration(int32_t teamNumber,
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
 
     MotionPlannerParams params;
-    params.robotRadius = 0.2;
+    params.robotRadius = 0.3;
     planner_.setParams(params);
 }
 
@@ -135,10 +135,10 @@ void Exploration::copyDataForUpdate(void)
     // The first pose received is considered to be the home pose
     if(!haveHomePose_)
     {
-        //homePose_ = incomingPose_;
+        homePose_ = incomingPose_;
         haveHomePose_ = true;
-        homePose_.x = 0;
-        homePose_.y = 0;
+        //homePose_.x = 0;
+        //homePose_.y = 0;
         std::cout << "INFO: Exploration: Set home pose:" << homePose_.x << ',' << homePose_.y << ','
             << homePose_.theta << '\n';
     }
@@ -318,36 +318,6 @@ int8_t Exploration::executeExploringMap(bool initialize)
     }
 }
 
-/*
-robot_path_t Exploration::findPathHome(void){
-  std::cout<<"Map INFO: "<<currentMap_.heightInMeters()<<currentMap_.widthInMeters()<<std::endl;
-  robot_path_t path;
-  path.path_length = 0;
-  pose_xyt_t homePose2;
-  int L = 10;
-  for (int l=0; l<L;++l){
-    for (int m=0; m<l; ++m){
-      for (int n=0; n<l; ++n){
-        homePose2.x = homePose_.x + (m-l/2)*currentMap_.metersPerCell();
-        homePose2.y = homePose_.y + (n-l/2)*currentMap_.metersPerCell();
-        std::cout<<"HOME: "<<homePose2.x <<" "<<homePose2.y<<std::endl;
-        if(planner_.isValidGoal(homePose2)){
-          std::cout<<"Valid Home.\n";
-          path = planner_.planPath(currentPose_, homePose2);
-          //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
-          if(planner_.isPathSafe(path) && path.path_length!=0){
-            std::cout<<"A path to homePose is returned.\n";
-            return path;
-          }
-        }
-      }
-    }
-  }
-
-  std::cout<<"Empty path to home.\n";
-  return path;
-}
-*/
 
 int8_t Exploration::executeReturningHome(bool initialize)
 {
@@ -378,6 +348,7 @@ int8_t Exploration::executeReturningHome(bool initialize)
     if(distToHome <= kReachedPositionThreshold)
     {
         status.status = exploration_status_t::STATUS_COMPLETE;
+        std::cout<<"Returning complete.\n";
     }
     // Otherwise, if there's a path, then keep following it
     else if(currentPath_.path.size() > 1)
@@ -398,9 +369,13 @@ int8_t Exploration::executeReturningHome(bool initialize)
     {
         return exploration_status_t::STATE_RETURNING_HOME;
     }
-    else // if(status.status == exploration_status_t::STATUS_FAILED)
+    else if(status.status == exploration_status_t::STATUS_FAILED)
     {
         return exploration_status_t::STATE_FAILED_EXPLORATION;
+    }
+    else
+    {
+        return exploration_status_t::STATE_COMPLETED_EXPLORATION;
     }
 }
 
