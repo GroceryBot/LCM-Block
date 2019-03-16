@@ -23,6 +23,7 @@ robot_path_t search_for_path(pose_xyt_t start,
     //std::cout<<"Map INFO (w/h): "<<distances.widthInCells()<<" "<<distances.heightInCells()<<" "<<distances.widthInMeters()<<" "<<distances.heightInMeters()<<std::endl;
     //std::cout<<"Origin: "<<distances.originInGlobalFrame().x<<" "<<distances.originInGlobalFrame().y<<std::endl;
     robot_path_t path;
+    path.path_length = 0;
     path.utime = start.utime;
     //First node in path
     int width = distances.widthInCells();
@@ -87,7 +88,7 @@ robot_path_t search_for_path(pose_xyt_t start,
     }
 
     //std::cout<<"Out of the while loop"<<std::endl;
-    
+
     int sparser = 5;
     int i = 0;
     if(isDestinationReached(*cur, dest_node)){
