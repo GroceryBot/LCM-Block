@@ -484,13 +484,19 @@ class MotionController
         // odomToGlobalFrame_.x = 0;
         // odomToGlobalFrame_.y = 0;
         // odomToGlobalFrame_.theta = 0;
-        pose_xyt_t odomAtTime = odomTrace_.poseAt(globalPose.utime + time_offset);
+        //pose_xyt_t odomAtTime = odomTrace_.poseAt(globalPose.utime + time_offset);
         // double deltaTheta = angle_diff(odomAtTime.theta, globalPose.theta);
         // double xOdomRotated = (odomAtTime.x * std::cos(deltaTheta)) - (odomAtTime.y * std::sin(deltaTheta));
         // double yOdomRotated = (odomAtTime.x * std::sin(deltaTheta)) + (odomAtTime.y * std::cos(deltaTheta));
-        odomToGlobalFrame_.x = globalPose.x - odomAtTime.x;
-        odomToGlobalFrame_.y = globalPose.y - odomAtTime.y;
-        odomToGlobalFrame_.theta = -odomAtTime.theta + globalPose.theta;
+        //odomToGlobalFrame_.x = globalPose.x - odomAtTime.x;
+        //odomToGlobalFrame_.y = globalPose.y - odomAtTime.y;
+        //odomToGlobalFrame_.theta = -odomAtTime.theta + globalPose.theta;
+
+        pose_xyt_t pose_t = odomTrace_.poseAt(globalPose.utime+time_offset);
+        odomToGlobalFrame_.x = -pose_t.x + globalPose.x;
+        odomToGlobalFrame_.y = -pose_t.y + globalPose.y;
+        odomToGlobalFrame_.theta = -pose_t.theta + globalPose.theta;
+
         //std::cout << "ODOMETRY OFFSET" << std::endl;
         //std::cout << "X: " << odomToGlobalFrame_.x << " Y: " << odomToGlobalFrame_.y << " TH: " << odomToGlobalFrame_.theta << std::endl;
         //std::cout << "_____________" << std::endl;
@@ -503,7 +509,7 @@ class MotionController
         pose_xyt_t pose;
         pose.x = odomPose.x + odomToGlobalFrame_.x;
         pose.y = odomPose.y + odomToGlobalFrame_.y;
-        pose.theta = odomPose.theta + odomToGlobalFrame_.theta;
+        pose.theta = odomPose.theta; //+ odomToGlobalFrame_.theta;
         // pose.x = (odomPose.x * std::cos(odomToGlobalFrame_.theta)) - (odomPose.y * std::sin(odomToGlobalFrame_.theta)) + odomToGlobalFrame_.x;
         // pose.y = (odomPose.x * std::sin(odomToGlobalFrame_.theta)) + (odomPose.y * std::cos(odomToGlobalFrame_.theta)) + odomToGlobalFrame_.y;
         // pose.theta = angle_sum(odomPose.theta, odomToGlobalFrame_.theta);
