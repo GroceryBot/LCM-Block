@@ -206,7 +206,7 @@ class MotionController
         pose_xyt_t pose;
         pose.utime = pose.x = pose.y = pose.theta = 0;
         odomTrace_.addPose(pose);
-        // targets_.push_back(pose);
+        targets_.push_back(pose);
 
         theta_pid = PIDController(THETA_P, THETA_I, THETA_D, pose, pose);
         x_pid = PIDController(X_P, X_I, X_D, pose, pose);
