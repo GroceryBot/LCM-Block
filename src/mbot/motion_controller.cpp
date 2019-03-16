@@ -366,7 +366,7 @@ class MotionController
 
         // assigns targets to vector of poses corresponding to path
         targets_ = path->path;
-        std::reverse(targets_.begin(), targets_.end());
+        // std::reverse(targets_.begin(), targets_.end());
 
         std::cout << "received new path at time: " << path->utime << "\n";
         for (auto pose : targets_)
