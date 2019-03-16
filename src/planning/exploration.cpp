@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <cassert>
 
-const float kReachedPositionThreshold = 0.05f;  // must get within this distance of a position for it to be explored
+const float kReachedPositionThreshold = 0.1f;  // must get within this distance of a position for it to be explored
 
 // Define an equality operator for poses to allow direct comparison of two poses
 bool operator==(const pose_xyt_t& lhs, const pose_xyt_t& rhs)
@@ -135,11 +135,14 @@ void Exploration::copyDataForUpdate(void)
     // The first pose received is considered to be the home pose
     if(!haveHomePose_)
     {
-        homePose_ = incomingPose_;
+        //homePose_ = incomingPose_;
         haveHomePose_ = true;
+        homePose_.x = 0;
+        homePose_.y = 0;
         std::cout << "INFO: Exploration: Set home pose:" << homePose_.x << ',' << homePose_.y << ','
             << homePose_.theta << '\n';
     }
+
 }
 
 
@@ -214,7 +217,6 @@ void Exploration::executeStateMachine(void)
         pathReceived_ = false;
         most_recent_path_time = currentPath_.utime;
     }
-
 }
 
 
@@ -277,6 +279,8 @@ int8_t Exploration::executeExploringMap(bool initialize)
     if(frontiers_.empty())
     {
         std::cout<<"Frontiers empty.\n";
+        currentTarget_ = homePose_;
+        currentPath_.path_length = 0;
         status.status = exploration_status_t::STATUS_COMPLETE;
     }
     // Else if there's a path to follow, then we're still in the process of exploring
@@ -314,32 +318,36 @@ int8_t Exploration::executeExploringMap(bool initialize)
     }
 }
 
-
+/*
 robot_path_t Exploration::findPathHome(void){
+  std::cout<<"Map INFO: "<<currentMap_.heightInMeters()<<currentMap_.widthInMeters()<<std::endl;
   robot_path_t path;
   path.path_length = 0;
   pose_xyt_t homePose2;
-  int l = 10;
-  for (int m=0; m<l; ++m){
-    for (int n=0; n<l; ++n){
-      homePose2.x = homePose_.x + (m-l/2)*currentMap_.metersPerCell();
-      homePose2.y = homePose_.y + (n-l/2)*currentMap_.metersPerCell();
-      std::cout<<"HOME: "<<homePose2.x <<" "<<homePose2.y<<std::endl;
-      if(planner_.isValidGoal(homePose2)){
-        std::cout<<"Valid Home\n.";
-        path = planner_.planPath(currentPose_, homePose2);
-        //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
-        if(planner_.isPathSafe(path) && path.path_length!=0){
-          std::cout<<"A path to homePose is returned.\n";
-          return path;
+  int L = 10;
+  for (int l=0; l<L;++l){
+    for (int m=0; m<l; ++m){
+      for (int n=0; n<l; ++n){
+        homePose2.x = homePose_.x + (m-l/2)*currentMap_.metersPerCell();
+        homePose2.y = homePose_.y + (n-l/2)*currentMap_.metersPerCell();
+        std::cout<<"HOME: "<<homePose2.x <<" "<<homePose2.y<<std::endl;
+        if(planner_.isValidGoal(homePose2)){
+          std::cout<<"Valid Home.\n";
+          path = planner_.planPath(currentPose_, homePose2);
+          //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
+          if(planner_.isPathSafe(path) && path.path_length!=0){
+            std::cout<<"A path to homePose is returned.\n";
+            return path;
+          }
         }
       }
     }
   }
+
   std::cout<<"Empty path to home.\n";
   return path;
 }
-
+*/
 
 int8_t Exploration::executeReturningHome(bool initialize)
 {
@@ -351,7 +359,11 @@ int8_t Exploration::executeReturningHome(bool initialize)
     *       (2) currentPath_.path_length > 1  :  currently following a path to the home pose
     */
     planner_.setMap(currentMap_);
-    currentPath_ = findPathHome();
+    planner_.setNumFrontiers(0);
+    if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0){
+        currentPath_ = plan_path_to_home(homePose_, currentPose_, currentMap_, planner_);
+    }
+    std::cout<<"Path length to home: "<<currentPath_.path.size()<<"\n";
     /////////////////////////////// End student code ///////////////////////////////
 
     /////////////////////////   Create the status message    //////////////////////////
@@ -376,6 +388,7 @@ int8_t Exploration::executeReturningHome(bool initialize)
     else
     {
         status.status = exploration_status_t::STATUS_FAILED;
+        std::cout<<"No vaild path and not reached home.\n";
     }
 
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);

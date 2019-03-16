@@ -57,7 +57,7 @@ bool MotionPlanner::isValidGoal(const pose_xyt_t& goal) const
     if(num_frontiers != 1 && distanceFromPrev < 2 * searchParams_.minDistanceToObstacle) return false;
     //std::cout<<distances_.widthInCells()<<" "<<distances_.heightInCells()<<std::endl;
     auto goalCell = global_position_to_grid_cell(Point<double>(goal.x, goal.y), distances_);
-    //std::cout<<"Goal cell: "<<goalCell.x<<" "<<goalCell.y<<std::endl;
+    //std::cout<<"Home cell: "<<goalCell.x<<" "<<goalCell.y<<std::endl;
     // A valid goal is in the grid
     if(distances_.isCellInGrid(goalCell.x, goalCell.y))
     {
@@ -99,7 +99,7 @@ bool MotionPlanner::isPathSafe(const robot_path_t& path) const
 
 
 void MotionPlanner::setMap(const OccupancyGrid& map)
-{
+{   //std::cout<<"Setup map\n";
     distances_.setDistances(map);
 }
 

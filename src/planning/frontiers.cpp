@@ -86,6 +86,43 @@ std::vector<frontier_t> find_map_frontiers(const OccupancyGrid& map,
 }
 
 
+robot_path_t plan_path_to_home(const pose_xyt_t &homePose,
+                                   const pose_xyt_t& robotPose,
+                                   const OccupancyGrid& map,
+                                   const MotionPlanner& planner){
+   robot_path_t emptyPath;
+   emptyPath.utime = robotPose.utime;
+   emptyPath.path_length = 0;
+   std::cout<<"Map info (w,h): "<<map.widthInMeters()<<" "<<map.heightInMeters()<<" "<<map.heightInCells()<<" "<<map.widthInCells()<<std::endl;
+
+   pose_xyt_t goalPose2;
+   goalPose2.x  = homePose.x;
+   goalPose2.y  = homePose.y;
+
+     int L = 10;
+     for (int l=0; l<L; ++l){
+       for (int m=0; m<l; ++m){
+         for (int n=0; n<l; ++n){
+           goalPose2.x = homePose.x + (m-l/2)*map.metersPerCell();
+           goalPose2.y = homePose.y + (n-l/2)*map.metersPerCell();
+           std::cout<<"Home 2: "<<goalPose2.x<<" "<<goalPose2.y<<std::endl;
+           if(planner.isValidGoal(goalPose2)){
+             robot_path_t path;
+             path = planner.planPath(robotPose, goalPose2);
+             if(planner.isPathSafe(path) && path.path_length!=0){
+               std::cout<<"A path to home is returned.\n";
+               return path;
+             }
+           }
+         }
+      }
+   }
+   std::cout<<"Empty Path to home returned.\n";
+   return emptyPath;
+
+ }
+
+
 robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
                                    const pose_xyt_t& robotPose,
                                    const OccupancyGrid& map,
@@ -130,25 +167,27 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
         //pose_xyt_t goalPose2;
         //goalPose2.x  = frontiers[i].cells[j].x;
         //goalPose2.y  = frontiers[i].cells[j].y;
-        int l = 10;
-        for (int m=0; m<l; ++m){
-          for (int n=0; n<l; ++n){
-            goalPose2.x = goalPose.x + (m-l/2)*map.metersPerCell();
-            goalPose2.y = goalPose.y + (n-l/2)*map.metersPerCell();
-            //std::cout<<"Goal2: "<<goalPose2.x<<" "<<goalPose2.y<<std::endl;
-            if(planner.isValidGoal(goalPose2)){
-              //std::cout<<"Valid goal.\n";
-              robot_path_t path;
-              path = planner.planPath(robotPose, goalPose2);
-              //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
-              if(planner.isPathSafe(path) && path.path_length!=0){
-                std::cout<<"A path to frontier is returned.\n";
-                return path;
+        int L = 10;
+        for (int l=0; l<L; ++l){
+          for (int m=0; m<l; ++m){
+            for (int n=0; n<l; ++n){
+              goalPose2.x = goalPose.x + (m-l/2)*map.metersPerCell();
+              goalPose2.y = goalPose.y + (n-l/2)*map.metersPerCell();
+              //std::cout<<"Goal2: "<<goalPose2.x<<" "<<goalPose2.y<<std::endl;
+              if(planner.isValidGoal(goalPose2)){
+                //std::cout<<"Valid goal.\n";
+                robot_path_t path;
+                path = planner.planPath(robotPose, goalPose2);
+                //std::cout<<planner.isPathSafe(path) <<" "<<path.path_length<<std::endl;
+                if(planner.isPathSafe(path) && path.path_length!=0){
+                  std::cout<<"A path to frontier is returned.\n";
+                  return path;
+                }
               }
             }
+        //  }
           }
-      //  }
-      }
+        }
     }
     std::cout<<"Empty Path returned.\n";
     return emptyPath;
