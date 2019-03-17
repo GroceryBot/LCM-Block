@@ -129,7 +129,7 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
         return;
     }
     std::unordered_set< std::pair<int, int>,  pair_hash> missCells;
-    std::vector<std::pair<int, int>> occupied = generateOccupied(map);
+    // std::vector<std::pair<int, int>> occupied = generateOccupied(map);
     MovingLaserScan ml_scan(scan, last_pose, pose);
     for (unsigned int i = 0; i < ml_scan.size(); ++i)
     {
@@ -160,17 +160,17 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
             }
         }
 
-        float min_distance = 1000;
-        std::pair<int, int> min_location;
-        for (unsigned int k = 0; k < occupied.size(); ++k)
-        {
-            float dist = distance2(metersToCellX(x1, map), metersToCellY(y1, map), occupied[k].first, occupied[k].second);
-            if (dist < min_distance) {
-                min_location = occupied[k];
-                min_distance = dist;
-            }
-            if (min_distance == 0) break;
-        }
+        // float min_distance = 1000;
+        // std::pair<int, int> min_location;
+        // for (unsigned int k = 0; k < occupied.size(); ++k)
+        // {
+        //     float dist = distance2(metersToCellX(x1, map), metersToCellY(y1, map), occupied[k].first, occupied[k].second);
+        //     if (dist < min_distance) {
+        //         min_location = occupied[k];
+        //         min_distance = dist;
+        //     }
+        //     if (min_distance == 0) break;
+        // }
         // if (min_distance > 1) {
             int val = map.logOdds(metersToCellX(x1, map), metersToCellY(y1, map));
             if (val >= 127 || val + kHitOdds_ >= 127)
