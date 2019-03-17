@@ -74,8 +74,8 @@ std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
 {
   //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0.0, 0.01);
-  std::normal_distribution<double> distribution_theta(0.0, 0.002);
+  std::normal_distribution<double> distribution(0.0, 0.005);
+  std::normal_distribution<double> distribution_theta(0.0, 0.02);
 
   std::vector<particle_t> prior;
   std::vector<double> weight(kNumParticles_);
@@ -174,7 +174,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &
   //return pose;
   // if (max_weight < 0.2)
   // return pose;
-  float top_percent = min_weight + ((max_weight - min_weight) * 0.7);
+  float top_percent = min_weight + ((max_weight - min_weight) * 0.9);
 
   float s = 0.0f;
   for (unsigned int i = 0; i < posterior.size(); i++)
@@ -191,12 +191,11 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &
   {
     if (posterior[i].weight > top_percent)
     {
-      posterior_[i].weight /= s;
       if (std::abs(posterior[i].pose.x) < 5 && std::abs(posterior[i].pose.y) < 5)
       {
-        x += posterior[i].pose.x * posterior[i].weight;
-        y += posterior[i].pose.y * posterior[i].weight;
-        theta += posterior[i].pose.theta * posterior[i].weight;
+        x += posterior[i].pose.x * (posterior[i].weight / s);
+        y += posterior[i].pose.y * (posterior[i].weight / s);
+        theta += posterior[i].pose.theta * (posterior[i].weight / s);
       }
     }
   }

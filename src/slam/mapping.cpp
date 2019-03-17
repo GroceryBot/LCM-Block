@@ -4,6 +4,29 @@
 #include <common/grid_utils.hpp>
 #include <numeric>
 #include <math.h>
+#include <unordered_set>
+
+struct pair_hash
+{
+    inline std::size_t operator()(const std::pair<int, int> &v) const
+    {
+        return v.first * 31 + v.second;
+    }
+};
+
+
+std::vector<std::pair<int, int>> generateOccupied(const OccupancyGrid& map) {
+    std::vector<std::pair<int, int>> occupied;
+    occupied.clear();
+    for (int i = 0; i < map.widthInCells(); ++i) {
+        for (int j = 0; j < map.heightInCells(); ++j) {
+            if (map.logOdds(i, j) > 70) {
+                occupied.push_back({i, j});
+            }
+        }
+    }
+    return occupied;
+}
 
 Mapping::Mapping(float maxLaserDistance, int8_t hitOdds, int8_t missOdds)
     : kMaxLaserDistance_(maxLaserDistance), kHitOdds_(hitOdds), kMissOdds_(missOdds)
@@ -17,7 +40,7 @@ int metersToCellY(float y, OccupancyGrid &map)
 {
     return std::floor(y * map.cellsPerMeter()) + (map.heightInCells() / 2);
 }
-void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds)
+void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds, std::unordered_set< std::pair<int, int>,  pair_hash> &missCells)
 {
     float dx = x1 - x0;
     float dy = y1 - y0;
@@ -32,12 +55,16 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
     float cur_x = x0;
     for (; cur_x < x1; cur_x += 0.05)
     {
-        int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
-        if (val <= -127 || val - kMissOdds <= -127)
-            val = -127;
-        else
-            val -= kMissOdds;
-        map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
+        if (missCells.find({metersToCellX(cur_x, map), metersToCellY(cur_y, map)}) == missCells.end())
+        {
+            int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
+            if (val <= -127 || val - kMissOdds <= -127)
+                val = -127;
+            else
+                val -= kMissOdds;
+            map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
+            missCells.insert({metersToCellX(cur_x, map), metersToCellY(cur_y, map)});
+        }
         if (D > 0)
         {
             cur_y += yi * 0.05;
@@ -46,7 +73,7 @@ void plotLineLow(float x0, float y0, float x1, float y1, OccupancyGrid &map, flo
         D += 2 * dy;
     }
 }
-void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds)
+void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, float kMissOdds, std::unordered_set< std::pair<int, int>,  pair_hash> &missCells)
 {
     float dx = x1 - x0;
     float dy = y1 - y0;
@@ -61,12 +88,16 @@ void plotLineHigh(float x0, float y0, float x1, float y1, OccupancyGrid &map, fl
     float cur_x = x0;
     for (; cur_y < y1; cur_y += 0.05)
     {
-        int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
-        if (val <= -127 || val - kMissOdds <= -127)
-            val = -127;
-        else
-            val -= kMissOdds;
-        map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
+        if (missCells.find({metersToCellX(cur_x, map), metersToCellY(cur_y, map)}) == missCells.end())
+        {
+            int val = map.logOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map));
+            if (val <= -127 || val - kMissOdds <= -127)
+                val = -127;
+            else
+                val -= kMissOdds;
+            map.setLogOdds(metersToCellX(cur_x, map), metersToCellY(cur_y, map), val);
+            missCells.insert({metersToCellX(cur_x, map), metersToCellY(cur_y, map)});
+        }
         if (D > 0)
         {
             cur_x += xi * 0.05;
@@ -84,6 +115,9 @@ float calculateY(float distance, float theta)
 {
     return distance * sin(theta);
 }
+float distance2(float x1, float y1, float x2, float y2) {
+    return sqrt((x2 - x1)*(x2 - x1) + (y2 - y1) * (y2 - y1));
+}
 void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGrid &map)
 {
     //////////////// TODO: Implement your occupancy grid algorithm here ///////////////////////
@@ -94,6 +128,8 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
         started = true;
         return;
     }
+    std::unordered_set< std::pair<int, int>,  pair_hash> missCells;
+    std::vector<std::pair<int, int>> occupied = generateOccupied(map);
     MovingLaserScan ml_scan(scan, last_pose, pose);
     for (unsigned int i = 0; i < ml_scan.size(); ++i)
     {
@@ -105,30 +141,52 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
         {
             if (x0 > x1)
             {
-                plotLineLow(x1, y1, x0, y0, map, kMissOdds_);
+                plotLineLow(x1, y1, x0, y0, map, kMissOdds_, missCells);
             }
             else
             {
-                plotLineLow(x0, y0, x1, y1, map, kMissOdds_);
+                plotLineLow(x0, y0, x1, y1, map, kMissOdds_, missCells);
             }
         }
         else
         {
             if (y0 > y1)
             {
-                plotLineHigh(x1, y1, x0, y0, map, kMissOdds_);
+                plotLineHigh(x1, y1, x0, y0, map, kMissOdds_, missCells);
             }
             else
             {
-                plotLineHigh(x0, y0, x1, y1, map, kMissOdds_);
+                plotLineHigh(x0, y0, x1, y1, map, kMissOdds_, missCells);
             }
         }
-        int val = map.logOdds(metersToCellX(x1, map), metersToCellY(y1, map));
-        if (val >= 127 || val + kHitOdds_ >= 127)
-            val = 127;
-        else
-            val += kHitOdds_;
-        map.setLogOdds(metersToCellX(x1, map), metersToCellY(y1, map), val);
+
+        float min_distance = 1000;
+        std::pair<int, int> min_location;
+        for (unsigned int k = 0; k < occupied.size(); ++k)
+        {
+            float dist = distance2(metersToCellX(x1, map), metersToCellY(y1, map), occupied[k].first, occupied[k].second);
+            if (dist < min_distance) {
+                min_location = occupied[k];
+                min_distance = dist;
+            }
+            if (min_distance == 0) break;
+        }
+        // if (min_distance > 1) {
+            int val = map.logOdds(metersToCellX(x1, map), metersToCellY(y1, map));
+            if (val >= 127 || val + kHitOdds_ >= 127)
+                val = 127;
+            else
+                val += kHitOdds_;
+            map.setLogOdds(metersToCellX(x1, map), metersToCellY(y1, map), val);
+        // }
+        // else {
+        //     int val = map.logOdds(min_location.first, min_location.second);
+        //     if (val >= 127 || val + kHitOdds_ >= 127)
+        //         val = 127;
+        //     else
+        //         val += kHitOdds_;
+        //     map.setLogOdds(min_location.first, min_location.second, val);
+        // }
     }
     last_pose = pose;
 }

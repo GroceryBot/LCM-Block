@@ -6,9 +6,9 @@ struct odometry_t
     float y;
     float theta;
 
-   // float fwd_velocity;
-   // float ang_velocity;
-   // float left_velocity;
-   // float right_velocity;
+   float fwd_velocity;
+   float ang_velocity;
+   float left_velocity;
+   float right_velocity;
 
 }

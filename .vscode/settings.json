@@ -45,6 +45,7 @@
         "tuple": "cpp",
         "typeindex": "cpp",
         "typeinfo": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "unordered_set": "cpp"
     }
 }

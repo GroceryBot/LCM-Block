@@ -51,7 +51,7 @@ double SensorModel::likelihood(const particle_t& sample, const lidar_t& scan, co
             if (min_distance == 0) break;
         }
         if (min_distance <= 0.1) {
-            min_distance = 0.25;
+            min_distance = 0.5;
         }
         q += 1.0/(min_distance);
 
