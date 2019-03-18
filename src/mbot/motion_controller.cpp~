@@ -18,9 +18,9 @@
 #include <signal.h>
 #include <fstream>
 
-#define MAX_ANGULAR_SPEED 0.4f
+#define MAX_ANGULAR_SPEED 0.5f
 #define MIN_ANGULAR_SPEED 0.3f
-#define MAX_TRANS_SPEED 0.4f
+#define MAX_TRANS_SPEED 0.0.5f
 #define MIN_TRANS_SPEED 0.05f
 #define PI 3.14159265f
 #define MAX_ANGLE_TOLERANCE 0.025f
@@ -435,8 +435,8 @@ class MotionController
 
     bool haveReachedTarget(void)
     {
-        const float kPosTolerance = 0.07f;
-        const float kFinalPosTolerance = 0.07f;
+        const float kPosTolerance = 0.05f;
+        const float kFinalPosTolerance = 0.05f;
 
         //tolerance for intermediate waypoints can be more lenient
         float tolerance = (targets_.size() == 1) ? kFinalPosTolerance : kPosTolerance;

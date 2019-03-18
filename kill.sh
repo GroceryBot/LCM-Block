@@ -1,3 +1,3 @@
 #!/bin/bash
-pkill botgui
-pkill slam
+pkill odometry
+pkill motion_controll
