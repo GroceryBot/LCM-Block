@@ -42,7 +42,7 @@ robot_path_t search_for_path(pose_xyt_t start,
     start_node->f_score =  calculateHscore(*start_node, dest_node, distances, params);
     open_set.insert(start_node);
     //std::cout<<"search start (Cell): "<<start_node->n.x<<" "<<start_node->n.y<<" goal: "<<dest_node.n.x<<" "<<dest_node.n.y<<std::endl;
-
+    //std::cout<<"params: "<<params.minDistanceToObstacle<<std::endl;
     pq.push(start_node);
     //visited_list.insert(start_node.n);
     const Node* cur = start_node;
@@ -89,7 +89,7 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     //std::cout<<"Out of the while loop"<<std::endl;
 
-    int sparser = 3;
+    int sparser = 2;
     int i = sparser;
     if(isDestinationReached(*cur, dest_node)){
       while(cur!=nullptr){

@@ -47,7 +47,7 @@ Exploration::Exploration(int32_t teamNumber,
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
 
     MotionPlannerParams params;
-    params.robotRadius = 0.3;
+    params.robotRadius = 0.25;
     planner_.setParams(params);
 }
 
@@ -261,8 +261,12 @@ int8_t Exploration::executeExploringMap(bool initialize)
       if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0
           || sqrt((currentPose_.x-currentTarget_.x)*(currentPose_.x-currentTarget_.x) + (currentPose_.y-currentTarget_.y)*(currentPose_.y-currentTarget_.y))<0.1){
         //usleep(100000);
-        currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
-        currentTarget_ = currentPath_.path[currentPath_.path_length-1];
+        planner_.setMap(currentMap_);
+        frontiers_ = find_map_frontiers(currentMap_, currentPose_);
+        if(frontiers_.size()>0){
+          currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
+          currentTarget_ = currentPath_.path[currentPath_.path_length-1];
+        }
         //std::cout<<"Target: "<<currentTarget_.x<<" "<<currentTarget_.y<<std::endl;
       }
     }

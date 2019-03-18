@@ -19,7 +19,7 @@ void ObstacleDistanceGrid::setDistances(const OccupancyGrid& map)
     for(int i=0; i<width_; i++){
       for(int j=0; j<height_; j++){
         //std::cout<<i<<" "<<j<<" "<<findDistance(i,j, map) * metersPerCell_ <<std::endl;
-        distance(i,j) = findDistance(i,j, map) * metersPerCell_ ;
+        distance(i,j) = findDistance(i,j, map) * metersPerCell_;
       }
     }
 }
