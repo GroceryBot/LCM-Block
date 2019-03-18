@@ -18,9 +18,9 @@
 #include <signal.h>
 #include <fstream>
 
-#define MAX_ANGULAR_SPEED 0.4f
-#define MIN_ANGULAR_SPEED 0.3f
-#define MAX_TRANS_SPEED 0.4f
+#define MAX_ANGULAR_SPEED 0.3f
+#define MIN_ANGULAR_SPEED 0.2f
+#define MAX_TRANS_SPEED 0.3f
 #define MIN_TRANS_SPEED 0.05f
 #define PI 3.14159265f
 #define MAX_ANGLE_TOLERANCE 0.025f
@@ -435,8 +435,8 @@ class MotionController
 
     bool haveReachedTarget(void)
     {
-        const float kPosTolerance = 0.07f;
-        const float kFinalPosTolerance = 0.07f;
+        const float kPosTolerance = 0.05f;
+        const float kFinalPosTolerance = 0.05f;
 
         //tolerance for intermediate waypoints can be more lenient
         float tolerance = (targets_.size() == 1) ? kFinalPosTolerance : kPosTolerance;
@@ -496,7 +496,7 @@ class MotionController
         odomToGlobalFrame_.x = -pose_t.x + globalPose.x;
         odomToGlobalFrame_.y = -pose_t.y + globalPose.y;
         odomToGlobalFrame_.theta = -pose_t.theta + globalPose.theta;
-
+	odomTrace_.eraseTraceUntil(globalPose.utime + time_offset);
         //std::cout << "ODOMETRY OFFSET" << std::endl;
         //std::cout << "X: " << odomToGlobalFrame_.x << " Y: " << odomToGlobalFrame_.y << " TH: " << odomToGlobalFrame_.theta << std::endl;
         //std::cout << "_____________" << std::endl;
