@@ -89,8 +89,8 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     //std::cout<<"Out of the while loop"<<std::endl;
 
-    int sparser = 5;
-    int i = 0;
+    int sparser = 3;
+    int i = sparser;
     if(isDestinationReached(*cur, dest_node)){
       while(cur!=nullptr){
           if(i==sparser){

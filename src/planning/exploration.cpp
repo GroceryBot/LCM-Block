@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <cassert>
 
-const float kReachedPositionThreshold = 1.0f;  // must get within this distance of a position for it to be explored
+const float kReachedPositionThreshold = 0.1f;  // must get within this distance of a position for it to be explored
 
 // Define an equality operator for poses to allow direct comparison of two poses
 bool operator==(const pose_xyt_t& lhs, const pose_xyt_t& rhs)
@@ -97,7 +97,7 @@ void Exploration::handleConfirmation(const lcm::ReceiveBuffer* rbuf, const std::
     std::cout<<(confirm->channel == CONTROLLER_PATH_CHANNEL && confirm->creation_time == most_recent_path_time)<<std::endl;
     if(confirm->channel == CONTROLLER_PATH_CHANNEL && confirm->creation_time == most_recent_path_time){
       pathReceived_ = true;
-      std::cout<<"TRUE\n";
+      //std::cout<<"TRUE\n";
     }
 }
 
@@ -170,6 +170,7 @@ void Exploration::executeStateMachine(void)
 
             case exploration_status_t::STATE_RETURNING_HOME:
                 std::cout<<"Returning.\n";
+                //usleep(1000000);
                 nextState = executeReturningHome(stateChanged);
                 break;
 
@@ -259,11 +260,13 @@ int8_t Exploration::executeExploringMap(bool initialize)
       std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
       if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0
           || sqrt((currentPose_.x-currentTarget_.x)*(currentPose_.x-currentTarget_.x) + (currentPose_.y-currentTarget_.y)*(currentPose_.y-currentTarget_.y))<0.1){
+        //usleep(100000);
         currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
         currentTarget_ = currentPath_.path[currentPath_.path_length-1];
         //std::cout<<"Target: "<<currentTarget_.x<<" "<<currentTarget_.y<<std::endl;
       }
     }
+
     most_recent_path_time = currentPath_.utime;
     std::cout<<currentPath_.utime<<std::endl;
 
@@ -328,11 +331,11 @@ int8_t Exploration::executeReturningHome(bool initialize)
     *       (1) dist(currentPose_, targetPose_) < kReachedPositionThreshold  :  reached the home pose
     *       (2) currentPath_.path_length > 1  :  currently following a path to the home pose
     */
-    planner_.setMap(currentMap_);
+    //planner_.setMap(currentMap_);
     planner_.setNumFrontiers(0);
-    if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0){
+    //if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0){
         currentPath_ = plan_path_to_home(homePose_, currentPose_, currentMap_, planner_);
-    }
+    //}
     std::cout<<"Path length to home: "<<currentPath_.path.size()<<"\n";
     /////////////////////////////// End student code ///////////////////////////////
 

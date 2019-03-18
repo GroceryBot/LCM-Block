@@ -99,7 +99,7 @@ robot_path_t plan_path_to_home(const pose_xyt_t &homePose,
    goalPose2.x  = homePose.x;
    goalPose2.y  = homePose.y;
 
-     int L = 30;
+     int L = 50;
      for (int l=0; l<L; ++l){
        for (int m=0; m<l; ++m){
          for (int n=0; n<l; ++n){
@@ -154,6 +154,9 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
       goalPose.x/= frontiers[i].cells.size();
       goalPose.y/= frontiers[i].cells.size();
 
+      goalPose.x = 0.5*(robotPose.x + goalPose.x);
+      goalPose.y = 0.5*(robotPose.y + goalPose.y);
+
       pose_xyt_t goalPose2;
       goalPose2.x  = goalPose.x;
       goalPose2.y  = goalPose.y;
@@ -176,7 +179,7 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
                 }
               }
             }
-        //  }
+          //}
           }
         }
     }
