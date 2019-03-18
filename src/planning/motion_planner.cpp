@@ -106,8 +106,7 @@ void MotionPlanner::setMap(const OccupancyGrid& map)
 
 void MotionPlanner::setParams(const MotionPlannerParams& params)
 {
-  params_.robotRadius = 0.25;
     searchParams_.minDistanceToObstacle = params_.robotRadius;
     searchParams_.maxDistanceWithCost = 10.0 * searchParams_.minDistanceToObstacle;
-    searchParams_.distanceCostExponent = 1.0;
+    searchParams_.distanceCostExponent = 1.1;
 }

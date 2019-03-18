@@ -153,6 +153,7 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
       }
       goalPose.x/= frontiers[i].cells.size();
       goalPose.y/= frontiers[i].cells.size();
+      std::cout<<"Mean of frontiers: " <<  goalPose.x <<" "<<goalPose.y<<std::endl;
 
       //goalPose.x = 0.5*(robotPose.x + goalPose.x);
       //goalPose.y = 0.5*(robotPose.y + goalPose.y);
@@ -161,7 +162,7 @@ robot_path_t plan_path_to_frontier(const std::vector<frontier_t>& frontiers,
       goalPose2.x  = goalPose.x;
       goalPose2.y  = goalPose.y;
 
-        int L = 40;
+        int L = 30;
         for (int l=0; l<L; ++l){
           for (int m=0; m<l; ++m){
             for (int n=0; n<l; ++n){

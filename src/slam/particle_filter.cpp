@@ -137,7 +137,7 @@ std::vector<particle_t> ParticleFilter::computeNormalizedPosterior(const std::ve
     //if (posterior[i].weight>0.1){
     //std::cout<<"Hight weight particle: "<<i<<" weight: "<<posterior[i].weight<<posterior[i].pose.x<<' '<<posterior[i].pose.y<<std::endl;
     //}
-    std::cout << "likelihood " << posterior[i].weight << std::endl;
+    // std::cout << "likelihood " << posterior[i].weight << std::endl;
   }
   sensorModel_.init = false;
   return posterior;
@@ -150,7 +150,7 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &
   float x = 0;
   float y = 0;
   float theta = 0;
-  std::cout << "Posterior size: " << posterior.size() << std::endl;
+  // std::cout << "Posterior size: " << posterior.size() << std::endl;
   float max_weight = -1;
   float min_weight = 1000;
   for (unsigned int i = 0; i < posterior.size(); i++)

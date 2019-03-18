@@ -129,7 +129,7 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
         return;
     }
     std::unordered_set< std::pair<int, int>,  pair_hash> missCells;
-    // if(std::abs(pose.theta -last_pose.theta) > .12){
+    // if(std::abs(pose.theta -last_pose.theta) > .25){
     //   return;
     // }
     // std::vector<std::pair<int, int>> occupied = generateOccupied(map);
