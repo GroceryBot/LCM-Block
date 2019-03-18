@@ -127,12 +127,10 @@ robot_path_t search_for_path(pose_xyt_t start,
     return path;
 }
 
-
-bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
-                const ObstacleDistanceGrid& distances, const SearchParams& params){
-    float dx = second.x - first.x;
-    float dy = second.y - first.y;
-    //std::cout<<"Is path free: "<<dx<<" "<<dy<<std::endl;
+bool plotLineLow(float x0, float y0, float x1, float y1, float minDistanceToObstacle, const ObstacleDistanceGrid &distances)
+{
+    float dx = x1 - x0;
+    float dy = y1 - y0;
     float yi = 1;
     if (dy < 0)
     {
@@ -140,25 +138,85 @@ bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
         dy = -dy;
     }
     float D = 2 * dy - dx;
-    float cur_y = first.y;
-    float cur_x = first.x;
-    for (; cur_x < second.x; cur_x += 0.05)
+    float cur_y = y0;
+    float cur_x = x0;
+    for (; cur_x < x1; cur_x += 0.025)
     {
-        std::cout<<distances(cur_x, cur_y) <<std::endl;
-        if (distances(cur_x, cur_y) < params.minDistanceToObstacle )
-        {
-          //std::cout<<"False\n";
-          return false;
-        }
+      std::cout<<distances(cur_x, cur_y) <<std::endl;
+      if (distances(floor(cur_x*20 + 100), floor(cur_y*20 + 100)) < minDistanceToObstacle )
+      {
+        //std::cout<<"False\n";
+        return false;
+      }
         if (D > 0)
         {
-            cur_y += yi * 0.05;
+            cur_y += yi * 0.025;
             D -= 2 * dx;
         }
         D += 2 * dy;
     }
-    //std::cout<<"True\n";
     return true;
+}
+bool plotLineHigh(float x0, float y0, float x1, float y1,  float minDistanceToObstacle, const ObstacleDistanceGrid &distances)
+{
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    float xi = 1;
+    if (dx < 0)
+    {
+        xi = -1;
+        dx = -dx;
+    }
+    float D = 2 * dx - dy;
+    float cur_y = y0;
+    float cur_x = x0;
+    for (; cur_y < y1; cur_y += 0.025)
+    {
+      std::cout<<distances(cur_x, cur_y) <<std::endl;
+      if (distances(floor(cur_x*20 + 100), floor(cur_y*20 + 100)) < minDistanceToObstacle )
+      {
+        //std::cout<<"False\n";
+        return false;
+      }
+        if (D > 0)
+        {
+            cur_x += xi * 0.025;
+            D -= 2 * dy;
+        }
+        D += 2 * dx;
+    }
+    return true;
+}
+
+bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
+                const ObstacleDistanceGrid& distances, const SearchParams& params){
+    float x0 = first.x;
+    float y0 = first.y;
+    float x1 = second.x;
+    float y1 = second.y;
+    if (std::abs(y1 - y0) < std::abs(x1 - x0))
+    {
+        if (x0 > x1)
+        {
+            return plotLineLow(x1, y1, x0, y0, params.minDistanceToObstacle, distances);
+        }
+        else
+        {
+            return plotLineLow(x0, y0, x1, y1,params.minDistanceToObstacle, distances);
+        }
+    }
+    else
+    {
+        if (y0 > y1)
+        {
+            return plotLineHigh(x1, y1, x0, y0, params.minDistanceToObstacle, distances);
+        }
+        else
+        {
+            return plotLineHigh(x0, y0, x1, y1, params.minDistanceToObstacle, distances);
+        }
+    }
+
 }
 
 

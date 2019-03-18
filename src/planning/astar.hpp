@@ -77,6 +77,9 @@ robot_path_t search_for_path(pose_xyt_t start,
 //Test if the destination is reached.
 bool isDestinationReached(const Node &n, const Node &dest);
 
+bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
+                const ObstacleDistanceGrid& distances, const SearchParams& params);
+
 
 //Calculate f_score = distance from start + heuristic distance
 
