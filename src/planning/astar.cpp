@@ -120,6 +120,37 @@ robot_path_t search_for_path(pose_xyt_t start,
   }
   else
   {
+    if (distances(start_point.x, start_point.y) < params.minDistanceToObstacle) {
+        pose_xyt_t fix_location;
+        if (distances(start_point.x + 1, start_point.y) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x + 0.05;
+          fix_location.y = start_point.y;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+        if (distances(start_point.x - 1, start_point.y) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x - 0.05;
+          fix_location.y = start_point.y;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+        if (distances(start_point.x, start_point.y - 1) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x;
+          fix_location.y = start_point.y - 0.05;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+        if (distances(start_point.x, start_point.y + 1) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x;
+          fix_location.y = start_point.y + 0.05;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+    }
     std::cout << "No valid path.\n";
   }
 

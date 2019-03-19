@@ -137,8 +137,8 @@ void Exploration::copyDataForUpdate(void)
     {
         homePose_ = incomingPose_;
         haveHomePose_ = true;
-        //homePose_.x = 0;
-        //homePose_.y = 0;
+        homePose_.x = 0;
+        homePose_.y = 0;
         std::cout << "INFO: Exploration: Set home pose:" << homePose_.x << ',' << homePose_.y << ','
             << homePose_.theta << '\n';
     }
@@ -259,22 +259,22 @@ int8_t Exploration::executeExploringMap(bool initialize)
     frontiers_ = find_map_frontiers(currentMap_, currentPose_);
     if(frontiers_.size()>0){
       std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
-      if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0 || frontiers_.size()!=prev_frontier_size
-          || sqrt((currentPose_.x-currentTarget_.x)*(currentPose_.x-currentTarget_.x) + (currentPose_.y-currentTarget_.y)*(currentPose_.y-currentTarget_.y))<0.1){
+      if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0 || frontiers_.size()!=prev_frontier_size){
+        //  || sqrt((currentPose_.x-currentTarget_.x)*(currentPose_.x-currentTarget_.x) + (currentPose_.y-currentTarget_.y)*(currentPose_.y-currentTarget_.y))<0.1){
         //usleep(100000);
-        planner_.setMap(currentMap_);
-        frontiers_ = find_map_frontiers(currentMap_, currentPose_);
-        prev_frontier_size = frontiers_.size();
-        if(frontiers_.size()>0){
+        //planner_.setMap(currentMap_);
+        //frontiers_ = find_map_frontiers(currentMap_, currentPose_);
+      prev_frontier_size = frontiers_.size();
+        //if(frontiers_.size()>0){
           currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
           currentTarget_ = currentPath_.path[currentPath_.path_length-1];
-        }
+        //}
         //std::cout<<"Target: "<<currentTarget_.x<<" "<<currentTarget_.y<<std::endl;
       }
     }
 
     most_recent_path_time = currentPath_.utime;
-    std::cout<<currentPath_.utime<<std::endl;
+    //std::cout<<currentPath_.utime<<std::endl;
 
     /////////////////////////////// End student code ///////////////////////////////
 
@@ -293,7 +293,7 @@ int8_t Exploration::executeExploringMap(bool initialize)
         status.status = exploration_status_t::STATUS_COMPLETE;
     }
     // Else if there's a path to follow, then we're still in the process of exploring
-    else if(currentPath_.path.size() > 1)
+    else if(currentPath_.path.size() >= 1)
     {
         status.status = exploration_status_t::STATUS_IN_PROGRESS;
     }
@@ -362,7 +362,7 @@ int8_t Exploration::executeReturningHome(bool initialize)
         std::cout<<"Returning complete.\n";
     }
     // Otherwise, if there's a path, then keep following it
-    else if(currentPath_.path.size() > 1)
+    else if(currentPath_.path.size() >= 1)
     {
         status.status = exploration_status_t::STATUS_IN_PROGRESS;
     }
