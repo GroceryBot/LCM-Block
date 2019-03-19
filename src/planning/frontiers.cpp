@@ -99,7 +99,7 @@ robot_path_t plan_path_to_home(const pose_xyt_t &homePose,
    goalPose2.x  = homePose.x;
    goalPose2.y  = homePose.y;
 
-     int L = 80;
+     int L = 10;
      for (int l=0; l<L; ++l){
        for (int m=0; m<l; ++m){
          for (int n=0; n<l; ++n){

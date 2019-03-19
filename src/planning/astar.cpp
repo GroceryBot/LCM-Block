@@ -55,11 +55,16 @@ robot_path_t search_for_path(pose_xyt_t start,
 
       //Using 4-neighbour connection here -- can be changed to 8-neighbour
       std::vector<Point<int>> neighbours;
-      neighbours.resize(4);
-      neighbours[0] = Point<int>(std::max(0,cur->n.x-1), cur->n.y);
-      neighbours[3] = Point<int>(cur->n.x, std::max(0,cur->n.y-1));
-      neighbours[2] = Point<int>(std::min(cur->n.x+1, width), cur->n.y);
-      neighbours[1] = Point<int>(cur->n.x, std::min(cur->n.y+1, height));
+      neighbours.resize(8);
+      neighbours[0] = Point<int>(std::max(0, cur->n.x - 1), cur->n.y);
+      neighbours[3] = Point<int>(cur->n.x, std::max(0, cur->n.y - 1));
+      neighbours[2] = Point<int>(std::min(cur->n.x + 1, width), cur->n.y);
+      neighbours[1] = Point<int>(cur->n.x, std::min(cur->n.y + 1, height));
+      neighbours[7] = Point<int>(std::max(0, cur->n.x - 1), std::max(0, cur->n.y - 1));
+      neighbours[6] = Point<int>(std::max(0, cur->n.x - 1), std::min(cur->n.y + 1, height));
+      neighbours[5] = Point<int>(std::min(cur->n.x + 1, width), std::max(0, cur->n.y - 1));
+      neighbours[4] = Point<int>(std::min(cur->n.x + 1, width), std::min(cur->n.y + 1, height));
+
 
       for(unsigned int i=0; i<neighbours.size(); i++){
         if (distances(neighbours[i].x, neighbours[i].y)>params.minDistanceToObstacle){
@@ -194,26 +199,27 @@ bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
     float y0 = first.y;
     float x1 = second.x;
     float y1 = second.y;
+    float minDist =  params.minDistanceToObstacle + 0.05;
     if (std::abs(y1 - y0) < std::abs(x1 - x0))
     {
         if (x0 > x1)
         {
-            return plotLineLow(x1, y1, x0, y0, params.minDistanceToObstacle, distances);
+            return plotLineLow(x1, y1, x0, y0,minDist, distances);
         }
         else
         {
-            return plotLineLow(x0, y0, x1, y1,params.minDistanceToObstacle, distances);
+            return plotLineLow(x0, y0, x1, y1,minDist, distances);
         }
     }
     else
     {
         if (y0 > y1)
         {
-            return plotLineHigh(x1, y1, x0, y0, params.minDistanceToObstacle, distances);
+            return plotLineHigh(x1, y1, x0, y0, minDist, distances);
         }
         else
         {
-            return plotLineHigh(x0, y0, x1, y1, params.minDistanceToObstacle, distances);
+            return plotLineHigh(x0, y0, x1, y1, minDist, distances);
         }
     }
 
