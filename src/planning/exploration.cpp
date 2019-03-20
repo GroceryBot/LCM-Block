@@ -137,8 +137,8 @@ void Exploration::copyDataForUpdate(void)
     {
         homePose_ = incomingPose_;
         haveHomePose_ = true;
-        homePose_.x = 0;
-        homePose_.y = 0;
+        homePose_.x = 0.05;
+        homePose_.y = 0.05;
         std::cout << "INFO: Exploration: Set home pose:" << homePose_.x << ',' << homePose_.y << ','
             << homePose_.theta << '\n';
     }

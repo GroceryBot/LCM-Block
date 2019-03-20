@@ -52,10 +52,10 @@ robot_path_t search_for_path(pose_xyt_t start,
     //Using 4-neighbour connection here -- can be changed to 8-neighbour
     std::vector<Point<int>> neighbours;
     neighbours.resize(4);
-    neighbours[0] = Point<int>(std::max(0, cur->n.x - 1), cur->n.y);
-    neighbours[3] = Point<int>(cur->n.x, std::max(0, cur->n.y - 1));
-    neighbours[2] = Point<int>(std::min(cur->n.x + 1, width), cur->n.y);
-    neighbours[1] = Point<int>(cur->n.x, std::min(cur->n.y + 1, height));
+    neighbours[0] = Point<int>(cur->n.x - 1, cur->n.y);
+    neighbours[3] = Point<int>(cur->n.x,  cur->n.y - 1);
+    neighbours[2] = Point<int>(cur->n.x + 1, cur->n.y);
+    neighbours[1] = Point<int>(cur->n.x, cur->n.y + 1);
     // neighbours[7] = Point<int>(std::max(0, cur->n.x - 1), std::max(0, cur->n.y - 1));
     // neighbours[6] = Point<int>(std::max(0, cur->n.x - 1), std::min(cur->n.y + 1, height));
     // neighbours[5] = Point<int>(std::min(cur->n.x + 1, width), std::max(0, cur->n.y - 1));
@@ -63,8 +63,8 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     for (unsigned int i = 0; i < neighbours.size(); i++)
     {
-      //if (distances(neighbours[i].x, neighbours[i].y) > params.minDistanceToObstacle)
-      //{
+      if (distances(neighbours[i].x, neighbours[i].y) > params.minDistanceToObstacle)
+      {
         //std::cout<<"Neighbour #"<<i<<": "<<neighbours[i].x<<" "<<neighbours[i].y<<std::endl;
         Node *n = new Node(neighbours[i], cur, cur->g_score + metersPerCell);
         auto iter = open_set.find(n);
@@ -86,7 +86,7 @@ robot_path_t search_for_path(pose_xyt_t start,
             //std::cout<<"Updated Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n,*dest_node, distances, params)<<std::endl;
           }
         }
-      //}
+      }
     }
     //count++;
     pq.pop();
