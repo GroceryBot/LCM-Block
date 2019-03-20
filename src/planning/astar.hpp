@@ -55,6 +55,16 @@ struct hash
         );
     }
 };
+struct hash_point
+{
+    size_t operator()(Point<int> const  n) const
+    {
+        return (
+            (51 + std::hash<int>()(n.x)) * 51
+            + std::hash<int>()(n.y)
+        );
+    }
+};
 
 
 
@@ -84,5 +94,9 @@ float calculateHscore(const Node &n, const Node &dest,
                              const ObstacleDistanceGrid& distances,
                              const SearchParams& params);
 
+robot_path_t reconstruct_path(Node *end, int64_t time_path);
+
+
+float h_score(Node *start, Node *goal, const ObstacleDistanceGrid &distances);
 
 #endif // PLANNING_ASTAR_HPP

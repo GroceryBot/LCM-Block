@@ -5,11 +5,11 @@ class Node
 {
 public:
   Point<int> n;
-  mutable const Node *p;
+  mutable Node *p;
   mutable float f_score;
   mutable float g_score;
 
-  Node(Point<int> n,  const Node *p, float g_score):
+  Node(Point<int> n,   Node *p, float g_score):
   n(Point<int>(n.x, n.y)), p(p), f_score(std::numeric_limits<float>::infinity()), g_score(g_score)
   {};
 };
