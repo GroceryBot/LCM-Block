@@ -74,8 +74,8 @@ std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
 {
   //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0.0, 0.005);
-  std::normal_distribution<double> distribution_theta(0.0, 0.02);
+  std::normal_distribution<double> distribution(0.0, 0.002);
+  std::normal_distribution<double> distribution_theta(0.0, 0.05);
 
   std::vector<particle_t> prior;
   std::vector<double> weight(kNumParticles_);
