@@ -78,7 +78,7 @@ bool MotionPlanner::isPathSafe(const robot_path_t& path) const
 {
 
     ///////////// TODO: Implement your test for a safe path here //////////////////
-    if(path.path_length < 2)
+    if(path.path_length < 1)
     {
         return false;
     }
@@ -108,5 +108,5 @@ void MotionPlanner::setParams(const MotionPlannerParams& params)
 {
     searchParams_.minDistanceToObstacle = params_.robotRadius;
     searchParams_.maxDistanceWithCost = 10.0 * searchParams_.minDistanceToObstacle;
-    searchParams_.distanceCostExponent = 1.1;
+    searchParams_.distanceCostExponent = 1.0;
 }

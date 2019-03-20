@@ -51,20 +51,20 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     //Using 4-neighbour connection here -- can be changed to 8-neighbour
     std::vector<Point<int>> neighbours;
-    neighbours.resize(8);
+    neighbours.resize(4);
     neighbours[0] = Point<int>(std::max(0, cur->n.x - 1), cur->n.y);
     neighbours[3] = Point<int>(cur->n.x, std::max(0, cur->n.y - 1));
     neighbours[2] = Point<int>(std::min(cur->n.x + 1, width), cur->n.y);
     neighbours[1] = Point<int>(cur->n.x, std::min(cur->n.y + 1, height));
-    neighbours[7] = Point<int>(std::max(0, cur->n.x - 1), std::max(0, cur->n.y - 1));
-    neighbours[6] = Point<int>(std::max(0, cur->n.x - 1), std::min(cur->n.y + 1, height));
-    neighbours[5] = Point<int>(std::min(cur->n.x + 1, width), std::max(0, cur->n.y - 1));
-    neighbours[4] = Point<int>(std::min(cur->n.x + 1, width), std::min(cur->n.y + 1, height));
+    // neighbours[7] = Point<int>(std::max(0, cur->n.x - 1), std::max(0, cur->n.y - 1));
+    // neighbours[6] = Point<int>(std::max(0, cur->n.x - 1), std::min(cur->n.y + 1, height));
+    // neighbours[5] = Point<int>(std::min(cur->n.x + 1, width), std::max(0, cur->n.y - 1));
+    // neighbours[4] = Point<int>(std::min(cur->n.x + 1, width), std::min(cur->n.y + 1, height));
 
     for (unsigned int i = 0; i < neighbours.size(); i++)
     {
-      if (distances(neighbours[i].x, neighbours[i].y) > params.minDistanceToObstacle)
-      {
+      //if (distances(neighbours[i].x, neighbours[i].y) > params.minDistanceToObstacle)
+      //{
         //std::cout<<"Neighbour #"<<i<<": "<<neighbours[i].x<<" "<<neighbours[i].y<<std::endl;
         Node *n = new Node(neighbours[i], cur, cur->g_score + metersPerCell);
         auto iter = open_set.find(n);
@@ -86,11 +86,12 @@ robot_path_t search_for_path(pose_xyt_t start,
             //std::cout<<"Updated Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n,*dest_node, distances, params)<<std::endl;
           }
         }
-      }
+      //}
     }
     //count++;
     pq.pop();
   }
+
 
   //std::cout<<"Out of the while loop"<<std::endl;
 
@@ -114,6 +115,7 @@ robot_path_t search_for_path(pose_xyt_t start,
       i += 1;
       cur = cur->p;
     }
+    path.path.push_back(start);
     std::reverse(path.path.begin(), path.path.end());
     path.path.push_back(goal);
     path.path_length = path.path.size();
@@ -151,7 +153,8 @@ robot_path_t search_for_path(pose_xyt_t start,
           return path;
         }
     }
-    std::cout << "No valid path.\n";
+
+    std::cout << "No valid path.Ditance(100,100): "<<distances(100,100)<<std::endl;
   }
 
   //destory all new nodes
@@ -173,7 +176,7 @@ robot_path_t search_for_path(pose_xyt_t start,
 
 bool isDestinationReached(const Node &n, const Node &dest)
 {
-  return n.n == dest.n;
+  return n.n.x == dest.n.x && n.n.y == dest.n.y;
 }
 
 float calculateHscore(const Node &n, const Node &dest,
