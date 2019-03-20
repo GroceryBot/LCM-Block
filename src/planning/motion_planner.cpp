@@ -90,7 +90,7 @@ bool MotionPlanner::isPathSafe(const robot_path_t& path) const
     for(auto p : path.path)
     {
         Point<int> cell = distances_.poseToCell(p.x, p.y);
-        if(distances_(cell.x, cell.y) < params_.robotRadius)
+        if(distances_(cell.x, cell.y) < params_.robotRadius - 0.05)
         {
             std::cout<<"Path not safe\n";
             return false;

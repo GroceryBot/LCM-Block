@@ -78,7 +78,7 @@ robot_path_t search_for_path(pose_xyt_t start,
             n->f_score = n->g_score + calculateHscore(*n, dest_node, distances, params);
             open_set.insert(n);
             pq.push(n);
-            std::cout<<"Top: "<<pq.top()->n.x<<" "<<pq.top()->n.y<<" "<<pq.top()->f_score<<std::endl;
+            //std::cout<<"Top: "<<pq.top()->n.x<<" "<<pq.top()->n.y<<" "<<pq.top()->f_score<<std::endl;
             //std::cout<<"Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n, *dest_node, distances, params)<<std::endl;
           }
           else{
@@ -86,7 +86,7 @@ robot_path_t search_for_path(pose_xyt_t start,
               (*iter)->p = cur;
               (*iter)->f_score = n->g_score + calculateHscore(*(*iter), dest_node, distances, params);
               (*iter)->g_score = n->g_score;
-              std::cout<<"Updated Scores (f g h): "<<(*iter)->f_score<<" "<<(*iter)->g_score<<" "<<calculateHscore(*n,dest_node, distances, params)<<std::endl;
+              //std::cout<<"Updated Scores (f g h): "<<(*iter)->f_score<<" "<<(*iter)->g_score<<" "<<calculateHscore(*n,dest_node, distances, params)<<std::endl;
             }
          }
         }
@@ -203,7 +203,7 @@ bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
     float y0 = first.y;
     float x1 = second.x;
     float y1 = second.y;
-    float minDist =  params.minDistanceToObstacle + 0.05;
+    float minDist =  params.minDistanceToObstacle; //+ 0.025;
     if (std::abs(y1 - y0) < std::abs(x1 - x0))
     {
         if (x0 > x1)
@@ -243,6 +243,6 @@ float calculateHscore(const Node &n, const Node &dest,
   float cellDistance = distances(n.n.x, n.n.y);
   if(cellDistance > params.minDistanceToObstacle
      && cellDistance < params.maxDistanceWithCost)
-       h +=  pow(params.maxDistanceWithCost, params.distanceCostExponent);
+       h +=  pow(params.maxDistanceWithCost - cellDistance, params.distanceCostExponent);
   return h;
 }
