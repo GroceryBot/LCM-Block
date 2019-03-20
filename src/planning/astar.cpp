@@ -46,13 +46,13 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     if (*curr == *goalNode)
     {
-      Node * temp;
-      while(!openSet.empty()){
-        temp = *openSet.begin();
-        openSet.erase(openSet.begin());
-        delete temp;
-        temp = nullptr;
-      }
+      // Node * temp;
+      // while(!openSet.empty()){
+      //   temp = *openSet.begin();
+      //   openSet.erase(openSet.begin());
+      //   delete temp;
+      //   temp = nullptr;
+      // }
       return reconstruct_path(curr, start.utime);
     }
     else
@@ -70,16 +70,20 @@ robot_path_t search_for_path(pose_xyt_t start,
       neighbors.push_back(new Node(Point<int>(curr_x - 1, curr_y + 1), curr, curr->g_score + distance_between_points(curr->n, Point<int>(curr_x - 1, curr_y + 1)))); // NW
       neighbors.push_back(new Node(Point<int>(curr_x + 1, curr_y - 1), curr, curr->g_score + distance_between_points(curr->n, Point<int>(curr_x + 1, curr_y - 1)))); // SE
       neighbors.push_back(new Node(Point<int>(curr_x - 1, curr_y - 1), curr, curr->g_score + distance_between_points(curr->n, Point<int>(curr_x - 1, curr_y - 1)))); // SW
+      std::cout<< distances.widthInCells() <<" "<< distances.heightInCells()<<std::endl;
       for (unsigned int i = 0; i < neighbors.size(); ++i)
       {
-        if (distances(neighbors[i]->n.x, neighbors[i]->n.y) > params.minDistanceToObstacle
-            ||neighbors[i]->n.x > distances.widthInCells() || neighbors[i]->n.x < 0 || neighbors[i]->n.y > distances.heightInCells() || neighbors[i]->n.y < 0) {
+        if (//distances(neighbors[i]->n.x, neighbors[i]->n.y) > params.minDistanceToObstacle ||
+            neighbors[i]->n.x > distances.widthInCells() || neighbors[i]->n.x < 0 || neighbors[i]->n.y > distances.heightInCells() || neighbors[i]->n.y < 0) {
+          std::cout<<"Neighbors not avaiable.\n";
+          std::cout<<neighbors[i]->n.x<<" "<<neighbors[i]->n.y << std::endl;//<<" "<<distances(neighbors[i]->n.x, neighbors[i]->n.y)<<std::endl;
           continue;
         }
         if (closedSet.find(neighbors[i]->n) == closedSet.end())
         { // didn't find in closed set
           if (openSet.find(neighbors[i]) == openSet.end())
           {
+            std::cout<<"Added.\n";
             openSet.insert(neighbors[i]);
           }
           else if (neighbors[i]->g_score >= (*openSet.find(neighbors[i]))->g_score)
