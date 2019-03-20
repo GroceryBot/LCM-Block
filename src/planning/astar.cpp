@@ -83,7 +83,7 @@ robot_path_t search_for_path(pose_xyt_t start,
             (*iter)->p = cur;
             (*iter)->f_score = (*iter)->f_score - (*iter)->g_score + n->g_score;
             (*iter)->g_score = n->g_score;
-            std::cout<<"Updated Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n,*dest_node, distances, params)<<std::endl;
+            // std::cout<<"Updated Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n,*dest_node, distances, params)<<std::endl;
           }
         }
       }

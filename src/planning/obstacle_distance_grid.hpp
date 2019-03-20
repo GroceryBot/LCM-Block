@@ -40,15 +40,15 @@ public:
     Point<float> originInGlobalFrame(void) const { return globalOrigin_; }
 
     Point<float> cellToPose(int x, int y) const{
-      float xx = x*metersPerCell_ +  globalOrigin_.x;
-      float yy = y*metersPerCell_ +  globalOrigin_.y;
+      float xx = (x-100)*metersPerCell_;
+      float yy = (y-100)*metersPerCell_;
       Point<float> p(xx, yy);
       return p;
     }
 
     Point<int> poseToCell(float x, float y) const{
-      int xx = (x -  globalOrigin_.x)/metersPerCell_;
-      int yy = (y - globalOrigin_.y)/metersPerCell_;
+      int xx = x/metersPerCell_ + 100;
+      int yy = y/metersPerCell_ + 100;
       Point<int> p(xx, yy);
       return p;
     }
