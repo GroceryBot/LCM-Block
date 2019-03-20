@@ -46,6 +46,13 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     if (*curr == *goalNode)
     {
+      Node * temp;
+      while(!openSet.empty()){
+        temp = *openSet.begin();
+        openSet.erase(openSet.begin());
+        delete temp;
+        temp = nullptr;
+      }
       return reconstruct_path(curr, start.utime);
     }
     else
@@ -85,13 +92,6 @@ robot_path_t search_for_path(pose_xyt_t start,
     }
   }
 
-  Node * temp;
-  while(!closedSet.empty()){
-    temp = *closedSet.begin();
-    closedSet.erase(closedSet.begin());
-    delete temp;
-    temp = nullptr;
-  }
   return path;
 }
 
@@ -111,19 +111,6 @@ robot_path_t reconstruct_path(Node *end, int64_t time_path)
   retval.path_length = retval.path.size();
   std::reverse(retval.path.begin(), retval.path.end());
 
-  Node * temp;
-  while(!closedSet.empty()){
-    temp = *closedSet.begin();
-    closedSet.erase(closedSet.begin());
-    delete temp;
-    temp = nullptr;
-  }
-  while(!openSet.empty()){
-    temp = *openSet.begin();
-    openSet.erase(openSet.begin());
-    delete temp;
-    temp = nullptr;
-  }
   return retval;
 }
 
