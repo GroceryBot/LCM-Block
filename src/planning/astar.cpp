@@ -46,6 +46,13 @@ robot_path_t search_for_path(pose_xyt_t start,
 
     if (*curr == *goalNode)
     {
+      Node * temp;
+      while(!openSet.empty()){
+        temp = *openSet.begin();
+        openSet.erase(openSet.begin());
+        delete temp;
+        temp = nullptr;
+      }
       return reconstruct_path(curr, start.utime);
     }
     else
@@ -65,7 +72,8 @@ robot_path_t search_for_path(pose_xyt_t start,
       neighbors.push_back(new Node(Point<int>(curr_x - 1, curr_y - 1), curr, curr->g_score + distance_between_points(curr->n, Point<int>(curr_x - 1, curr_y - 1)))); // SW
       for (unsigned int i = 0; i < neighbors.size(); ++i)
       {
-        if (neighbors[i].x > distances.widthInCells() || neighbors[i].x < 0 || neighbors[i].y > distances.heightInCells() || neighbors[i].y < 0) {
+        if (distances(neighbors[i]->n.x, neighbors[i]->n.y) > params.minDistanceToObstacle
+            ||neighbors[i]->n.x > distances.widthInCells() || neighbors[i]->n.x < 0 || neighbors[i]->n.y > distances.heightInCells() || neighbors[i]->n.y < 0) {
           continue;
         }
         if (closedSet.find(neighbors[i]->n) == closedSet.end())
@@ -89,13 +97,6 @@ robot_path_t search_for_path(pose_xyt_t start,
     }
   }
 
-  Node * temp;
-  while(!closedSet.empty()){
-    temp = *closedSet.begin();
-    closedSet.erase(closedSet.begin());
-    delete temp;
-    temp = nullptr;
-  }
   return path;
 }
 
@@ -103,6 +104,7 @@ robot_path_t reconstruct_path(Node *end, int64_t time_path)
 {
   robot_path_t retval;
   Node *traverse = end;
+  std::cout<<"Path: \n";
   while (traverse != nullptr)
   {
     pose_xyt_t pose_traverse;
@@ -110,24 +112,12 @@ robot_path_t reconstruct_path(Node *end, int64_t time_path)
     pose_traverse.y = traverse->n.y;
     retval.path.push_back(pose_traverse);
     traverse = traverse->p;
+    std::cout<<pose_traverse.x<<" "<<pose_traverse.y<<std::endl;
   }
   retval.utime = time_path;
   retval.path_length = retval.path.size();
   std::reverse(retval.path.begin(), retval.path.end());
 
-  Node * temp;
-  while(!closedSet.empty()){
-    temp = *closedSet.begin();
-    closedSet.erase(closedSet.begin());
-    delete temp;
-    temp = nullptr;
-  }
-  while(!openSet.empty()){
-    temp = *openSet.begin();
-    openSet.erase(openSet.begin());
-    delete temp;
-    temp = nullptr;
-  }
   return retval;
 }
 
