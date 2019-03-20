@@ -13,6 +13,8 @@
 using std::set;
 using std::unordered_set;
 using std::vector;
+using std::cout;
+using std::endl;
 robot_path_t search_for_path(pose_xyt_t start,
                              pose_xyt_t goal,
                              const ObstacleDistanceGrid &distances,
@@ -34,9 +36,14 @@ robot_path_t search_for_path(pose_xyt_t start,
   openSet.insert(startNode);
   // openSet_s.insert(startNode->n);
 
+  cout << "ENTER LOOP" << endl;
+
   while (!openSet.empty())
   {
-    Node *curr = *openSet.begin(); //CHECK THIS
+    Node *curr = *openSet.begin();
+    cout << curr->n.x << " ";
+    cout << curr->n.y << endl;
+
     if (*curr == *goalNode)
     {
       return reconstruct_path(curr, start.utime);
@@ -78,6 +85,13 @@ robot_path_t search_for_path(pose_xyt_t start,
     }
   }
 
+  Node * temp;
+  while(!closedSet.empty()){
+    temp = *closedSet.begin();
+    closedSet.erase(closedSet.begin());
+    delete temp;
+    temp = nullptr;
+  }
   return path;
 }
 
@@ -96,6 +110,20 @@ robot_path_t reconstruct_path(Node *end, int64_t time_path)
   retval.utime = time_path;
   retval.path_length = retval.path.size();
   std::reverse(retval.path.begin(), retval.path.end());
+
+  Node * temp;
+  while(!closedSet.empty()){
+    temp = *closedSet.begin();
+    closedSet.erase(closedSet.begin());
+    delete temp;
+    temp = nullptr;
+  }
+  while(!openSet.empty()){
+    temp = *openSet.begin();
+    openSet.erase(openSet.begin());
+    delete temp;
+    temp = nullptr;
+  }
   return retval;
 }
 
