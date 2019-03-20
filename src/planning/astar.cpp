@@ -41,7 +41,7 @@ robot_path_t search_for_path(pose_xyt_t start,
     Node* start_node = new Node(start_point, nullptr,0);
     start_node->f_score =  calculateHscore(*start_node, dest_node, distances, params);
     open_set.insert(start_node);
-    //std::cout<<"search start (Cell): "<<start_node->n.x<<" "<<start_node->n.y<<" goal: "<<dest_node.n.x<<" "<<dest_node.n.y<<std::endl;
+    std::cout<<"search start (Cell): "<<start_node->n.x<<" "<<start_node->n.y<<" goal: "<<dest_node.n.x<<" "<<dest_node.n.y<<std::endl;
 
     pq.push(start_node);
     //visited_list.insert(start_node.n);
@@ -70,20 +70,23 @@ robot_path_t search_for_path(pose_xyt_t start,
         if (distances(neighbours[i].x, neighbours[i].y)>params.minDistanceToObstacle){
           //std::cout<<"Neighbour #"<<i<<": "<<neighbours[i].x<<" "<<neighbours[i].y<<std::endl;
           Node* n = new Node(neighbours[i], cur, cur->g_score+metersPerCell);
+          if(i>=4){
+            n->g_score += (sqrt(2) - 1)*metersPerCell;
+          }
           auto iter = open_set.find(n);
           if(iter==open_set.end()){
             n->f_score = n->g_score + calculateHscore(*n, dest_node, distances, params);
             open_set.insert(n);
             pq.push(n);
-            //std::cout<<"Top: "<<pq.top()->n.x<<" "<<pq.top()->n.y<<" "<<pq.top()->f_score<<std::endl;
+            std::cout<<"Top: "<<pq.top()->n.x<<" "<<pq.top()->n.y<<" "<<pq.top()->f_score<<std::endl;
             //std::cout<<"Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n, *dest_node, distances, params)<<std::endl;
           }
           else{
             if(n->g_score < (*iter)->g_score){
               (*iter)->p = cur;
-              (*iter)->f_score = (*iter)->f_score - (*iter)->g_score + n->g_score;
+              (*iter)->f_score = n->g_score + calculateHscore(*(*iter), dest_node, distances, params);
               (*iter)->g_score = n->g_score;
-              //std::cout<<"Updated Scores (f g h): "<<n->f_score<<" "<<n->g_score<<" "<<calculateHscore(*n,*dest_node, distances, params)<<std::endl;
+              std::cout<<"Updated Scores (f g h): "<<(*iter)->f_score<<" "<<(*iter)->g_score<<" "<<calculateHscore(*n,dest_node, distances, params)<<std::endl;
             }
          }
         }
@@ -126,7 +129,8 @@ robot_path_t search_for_path(pose_xyt_t start,
       open_set.erase(it);
       delete *it;
     }
-    std::cout<<"Destination reached, Path length: "<<path.path_length<<std::endl;
+
+    std::cout<<"Path returned. Length: "<<path.path_length<<std::endl;
 
     //std::cout<<(*iter)->n.x<<" "<<(*iter)->n.y<<" "<<(*iter)->f_score<<std::endl;
     return path;
@@ -147,7 +151,7 @@ bool plotLineLow(float x0, float y0, float x1, float y1, float minDistanceToObst
     float cur_x = x0;
     for (; cur_x < x1; cur_x += 0.025)
     {
-      std::cout<<distances(cur_x, cur_y) <<std::endl;
+      //std::cout<<distances(cur_x, cur_y) <<std::endl;
       if (distances(floor(cur_x*20 + 100), floor(cur_y*20 + 100)) < minDistanceToObstacle )
       {
         //std::cout<<"False\n";
@@ -177,7 +181,7 @@ bool plotLineHigh(float x0, float y0, float x1, float y1,  float minDistanceToOb
     float cur_x = x0;
     for (; cur_y < y1; cur_y += 0.025)
     {
-      std::cout<<distances(cur_x, cur_y) <<std::endl;
+      //std::cout<<distances(cur_x, cur_y) <<std::endl;
       if (distances(floor(cur_x*20 + 100), floor(cur_y*20 + 100)) < minDistanceToObstacle )
       {
         //std::cout<<"False\n";
