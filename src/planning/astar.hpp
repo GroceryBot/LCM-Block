@@ -85,7 +85,8 @@ bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
 
 float calculateHscore(const Node &n, const Node &dest,
                              const ObstacleDistanceGrid& distances,
-                             const SearchParams& params);
+                             const SearchParams& params,
+                             bool test_thing);
 
 
 #endif // PLANNING_ASTAR_HPP

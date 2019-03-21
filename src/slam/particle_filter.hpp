@@ -74,7 +74,9 @@ public:
     
 private:
     
-    std::vector<particle_t> posterior_;     // The posterior distribution of particles at the end of the previous update
+    // std::vector<particle_t> posterior_;     // The posterior distribution of particles at the end of the previous update
+    // std::vector<particle_t> prior;     // The posterior distribution of particles at the end of the previous update
+    std::vector<particle_t> proposal;     // The posterior distribution of particles at the end of the previous update
     pose_xyt_t posteriorPose_;              // Pose estimate associated with the posterior distribution
     
     ActionModel actionModel_;   // Action model to apply to particles on each update
@@ -82,12 +84,11 @@ private:
     
     int kNumParticles_;         // Number of particles to use for estimating the pose
     
-    std::vector<particle_t> resamplePosteriorDistribution(void);
-    std::vector<particle_t> computeProposalDistribution(const std::vector<particle_t>& prior);
-    std::vector<particle_t> computeNormalizedPosterior(const std::vector<particle_t>& proposal,
-                                                       const lidar_t& laser,
+    void resamplePosteriorDistribution(void);
+    void computeProposalDistribution();
+    void computeNormalizedPosterior(const lidar_t& laser,
                                                        const OccupancyGrid&   map);
-    pose_xyt_t estimatePosteriorPose(const std::vector<particle_t>& posterior);
+    pose_xyt_t estimatePosteriorPose();
 };
 
 #endif // SLAM_PARTICLE_FILTER_HPP

@@ -7,11 +7,12 @@ ParticleFilter::ParticleFilter(int numParticles)
     : kNumParticles_(numParticles)
 {
   assert(kNumParticles_ > 1);
-  posterior_.resize(kNumParticles_);
+  proposal.resize(kNumParticles_);
 }
 
 void ParticleFilter::initializeFilterAtPose(const pose_xyt_t &pose)
 {
+  // proposal(kNumParticles_);
   ///////////// TODO: Implement your method for initializing the particles in the particle filter /////////////////
   //uniformly assigned weight
   std::default_random_engine generator;
@@ -33,7 +34,7 @@ void ParticleFilter::initializeFilterAtPose(const pose_xyt_t &pose)
     randParticle.pose = randPose;
     randParticle.weight = w;
     // std::cout<<"Rand pose "<<i<<" "<<randPose.x<<" "<<randPose.y<<" "<<randPose.theta<<" "<<randParticle.weight<<std::endl;
-    posterior_[i] = randParticle;
+    proposal[i] = randParticle;
   }
   // std::cout<<"Initialization done. Posterior size: "<< posterior_.size()<<std::endl;
 }
@@ -44,13 +45,14 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t &odometry,
 {
   // Only update the particles if motion was detected. If the robot didn't move, then
   // obviously don't do anything.
+  // proposal.clear();
   bool hasRobotMoved = actionModel_.updateAction(odometry);
   if (hasRobotMoved)
   {
-    auto prior = resamplePosteriorDistribution();
-    auto proposal = computeProposalDistribution(prior);
-    posterior_ = computeNormalizedPosterior(proposal, laser, map);
-    posteriorPose_ = estimatePosteriorPose(posterior_);
+    resamplePosteriorDistribution();
+    computeProposalDistribution();
+    computeNormalizedPosterior(laser, map);
+    posteriorPose_ = estimatePosteriorPose();
   }
   posteriorPose_.utime = odometry.utime;
 
@@ -65,85 +67,85 @@ pose_xyt_t ParticleFilter::poseEstimate(void) const
 particles_t ParticleFilter::particles(void) const
 {
   particles_t particles;
-  particles.num_particles = posterior_.size();
-  particles.particles = posterior_;
+  particles.num_particles = proposal.size();
+  particles.particles = proposal;
   return particles;
 }
 
-std::vector<particle_t> ParticleFilter::resamplePosteriorDistribution(void)
+void ParticleFilter::resamplePosteriorDistribution(void)
 {
   //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
   std::default_random_engine generator;
   std::normal_distribution<double> distribution(0.0, 0.002);
   std::normal_distribution<double> distribution_theta(0.0, 0.05);
 
-  std::vector<particle_t> prior;
+  // std::vector<particle_t> prior;
+  // prior.reserve(kNumParticles_);
   std::vector<double> weight(kNumParticles_);
-  assert(!posterior_.empty());
-  if (posterior_.empty())
-    return prior;
-  weight[0] = posterior_[0].weight;
+  assert(!proposal.empty());
+  // if (proposal.empty())
+  //   return proposal;
+  weight[0] = proposal[0].weight;
 
   //calculate cumulative weight distribution
-  for (unsigned int i = 1; i < posterior_.size(); i++)
+  for (unsigned int i = 1; i < proposal.size(); i++)
   {
-    weight[i] = weight[i - 1] + posterior_[i].weight;
+    weight[i] = weight[i - 1] + proposal[i].weight;
   }
 
+  std::vector<particle_t> new_thing;
+  new_thing.reserve(kNumParticles_);
   //draw M particles from previous poterior distribution
   for (int i = 0; i < kNumParticles_; i++)
   {
     double random_weight = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     std::vector<double>::iterator up;
     up = std::upper_bound(weight.begin(), weight.end(), random_weight);
-    particle_t top = posterior_[std::distance(weight.begin(), up)];
+    particle_t top = proposal[std::distance(weight.begin(), up)];
     top.pose.x += distribution(generator);
     top.pose.y += distribution(generator);
     top.pose.theta += distribution_theta(generator);
-    prior.push_back(top);
+    new_thing.push_back(top);
   }
-  return prior;
+  proposal = new_thing;
+  // return proposal;
 }
 
-std::vector<particle_t> ParticleFilter::computeProposalDistribution(const std::vector<particle_t> &prior)
+void ParticleFilter::computeProposalDistribution()
 {
   //////////// TODO: Implement your algorithm for creating the proposal distribution by sampling from the ActionModel
-  std::vector<particle_t> proposal = prior;
+  // std::vector<particle_t> proposal(kNumParticles_);
   for (unsigned int i = 0; i < proposal.size(); i++)
   {
     proposal[i] = actionModel_.applyAction(proposal[i]);
   }
-  return proposal;
 }
 
-std::vector<particle_t> ParticleFilter::computeNormalizedPosterior(const std::vector<particle_t> &proposal,
-                                                                   const lidar_t &laser,
+void ParticleFilter::computeNormalizedPosterior(const lidar_t &laser,
                                                                    const OccupancyGrid &map)
 {
   /////////// TODO: Implement your algorithm for computing the normalized posterior distribution using the
   ///////////       particles in the proposal distribution
-  std::vector<particle_t> posterior = proposal;
   double s = 0.0f;
 
-  for (unsigned int i = 0; i < posterior.size(); i++)
+  for (unsigned int i = 0; i < proposal.size(); i++)
   {
-    posterior[i].weight = sensorModel_.likelihood(posterior[i], laser, map);
-    s += posterior[i].weight;
+    proposal[i].weight = sensorModel_.likelihood(proposal[i], laser, map);
+    s += proposal[i].weight;
   }
   //normalize particle weights (make them add up to one)
-  for (unsigned int i = 0; i < posterior.size(); i++)
+  for (unsigned int i = 0; i < proposal.size(); i++)
   {
-    posterior[i].weight /= s;
+    proposal[i].weight /= s;
     //if (posterior[i].weight>0.1){
     //std::cout<<"Hight weight particle: "<<i<<" weight: "<<posterior[i].weight<<posterior[i].pose.x<<' '<<posterior[i].pose.y<<std::endl;
     //}
     // std::cout << "likelihood " << posterior[i].weight << std::endl;
   }
   sensorModel_.init = false;
-  return posterior;
 }
 
-pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &posterior)
+pose_xyt_t ParticleFilter::estimatePosteriorPose()
 {
   //////// TODO: Implement your method for computing the final pose estimate based on the posterior distribution
   pose_xyt_t pose;
@@ -153,50 +155,50 @@ pose_xyt_t ParticleFilter::estimatePosteriorPose(const std::vector<particle_t> &
   // std::cout << "Posterior size: " << posterior.size() << std::endl;
   float max_weight = -1;
   float min_weight = 1000;
-  for (unsigned int i = 0; i < posterior.size(); i++)
+  for (unsigned int i = 0; i < proposal.size(); i++)
   {
-    if (posterior[i].weight > max_weight)
+    if (proposal[i].weight > max_weight)
     {
-      max_weight = posterior[i].weight;
+      max_weight = proposal[i].weight;
       // x=posterior[i].pose.x;
       // y=posterior[i].pose.y;
       // theta=posterior[i].pose.theta;
     }
-    if (posterior[i].weight < min_weight)
+    if (proposal[i].weight < min_weight)
     {
-      min_weight = posterior[i].weight;
+      min_weight = proposal[i].weight;
     }
   }
   // pose.x = x;
   // pose.y = y;
   // pose.theta = theta;
-  // std::cout << "Estimated pose weight: " << max_weight << std::endl;
   //return pose;
   // if (max_weight < 0.2)
   // return pose;
   float top_percent = min_weight + ((max_weight - min_weight) * 0.9);
 
   float s = 0.0f;
-  for (unsigned int i = 0; i < posterior.size(); i++)
+  for (unsigned int i = 0; i < proposal.size(); i++)
   {
-    if (posterior_[i].weight > top_percent) {
-      s += posterior_[i].weight;
+    if (proposal[i].weight > top_percent) {
+      s += proposal[i].weight;
     }
   }
 
   x = 0;
   y = 0;
   theta = 0;
-  for (unsigned int i = 0; i < posterior.size(); i++)
+  for (unsigned int i = 0; i < proposal.size(); i++)
   {
-    if (posterior[i].weight > top_percent)
+    if (proposal[i].weight > top_percent)
     {
-      if (std::abs(posterior[i].pose.x) < 5 && std::abs(posterior[i].pose.y) < 5)
+      if (std::abs(proposal[i].pose.x) < 5 && std::abs(proposal[i].pose.y) < 5)
       {
-        x += posterior[i].pose.x * (posterior[i].weight / s);
-        y += posterior[i].pose.y * (posterior[i].weight / s);
-        theta += posterior[i].pose.theta * (posterior[i].weight / s);
+        x += proposal[i].pose.x * (proposal[i].weight / s);
+        y += proposal[i].pose.y * (proposal[i].weight / s);
+        theta += proposal[i].pose.theta * (proposal[i].weight / s);
       }
+  // std::cout<<"Estimated pose: "<< x<<" "<< y<<" "<< theta<<std::endl;
     }
   }
   pose.x = x;
