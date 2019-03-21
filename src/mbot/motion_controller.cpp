@@ -26,11 +26,11 @@
 #define MAX_ANGLE_TOLERANCE 0.025f
 
 double MAX_TRANS_TOLERANCE = 2.5;
-double THETA_P = 0.65;
-double THETA_I = 0.0;
-double THETA_D = 0.06;
+double THETA_P = 0.2;
+double THETA_I = 0.01;
+double THETA_D = 0.01;
 double X_P = 0.13;
-double X_I = 0.00;
+double X_I = 0.01;
 double X_D = 0.06;
 std::ofstream csv;
 
@@ -286,7 +286,7 @@ class MotionController
                 cmd.angular_v = 0.0f;
                 // Use PIDs to get magnitude of output
 
-                if (angular_error > MAX_ANGLE_TOLERANCE * 8) // turning is linear feedback control
+                if (angular_error > MAX_ANGLE_TOLERANCE) // turning is linear feedback control
                 {
                     x_pid.integrated_error = 0;
                     last_trans_speed = 0;
