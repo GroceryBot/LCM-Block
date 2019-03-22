@@ -46,11 +46,11 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t &odometry,
   // Only update the particles if motion was detected. If the robot didn't move, then
   // obviously don't do anything.
   // proposal.clear();
+  bool hasRobotMoved = actionModel_.updateAction(odometry);
   modulo_num++;
-  if (modulo_num % 12)
+  if (modulo_num % 2)
   {
     modulo_num = 0;
-    bool hasRobotMoved = actionModel_.updateAction(odometry);
     if (hasRobotMoved) {
     resamplePosteriorDistribution();
     computeProposalDistribution();
