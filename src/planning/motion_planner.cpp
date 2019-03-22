@@ -94,7 +94,7 @@ bool MotionPlanner::isPathSafe(const robot_path_t& path) const
       continue;
     }
         Point<int> cell = distances_.poseToCell(p.x, p.y);
-        if(distances_(cell.x, cell.y) < params_.robotRadius - 0.05)
+        if(distances_(cell.x, cell.y) < params_.robotRadius - 0.08)
         {
             std::cout<<"Path not safe\n";
             return false;
@@ -114,5 +114,5 @@ void MotionPlanner::setParams(const MotionPlannerParams& params)
 {
     searchParams_.minDistanceToObstacle = params_.robotRadius;
     searchParams_.maxDistanceWithCost = 10.0 * searchParams_.minDistanceToObstacle;
-    searchParams_.distanceCostExponent = 1.1;
+    searchParams_.distanceCostExponent = 1.0;
 }

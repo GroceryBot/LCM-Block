@@ -48,7 +48,7 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t &odometry,
   // proposal.clear();
   bool hasRobotMoved = actionModel_.updateAction(odometry);
   if (hasRobotMoved) modulo_num++;
-  if (hasRobotMoved && modulo_num % 2)
+  if (hasRobotMoved && modulo_num % 3)
   {
     modulo_num = 0;
     resamplePosteriorDistribution();

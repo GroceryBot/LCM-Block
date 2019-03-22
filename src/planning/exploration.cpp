@@ -340,8 +340,10 @@ int8_t Exploration::executeReturningHome(bool initialize)
     */
     planner_.setMap(currentMap_);
     planner_.setNumFrontiers(0);
+    bool nearHome = sqrt(pow(currentPose_.x - currentTarget_.x, 2) + pow(currentPose_.y - currentTarget_.y, 2))<0.1;
+    bool willReachHome = sqrt((homePose_.x-currentTarget_.x)*(homePose_.x-currentTarget_.x) + (homePose_.y-currentTarget_.y)*(homePose_.y-currentTarget_.y))<0.1;
     if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0 ||currentPath_.path.size() == 0
-      || sqrt((homePose_.x-currentTarget_.x)*(homePose_.x-currentTarget_.x) + (homePose_.y-currentTarget_.y)*(homePose_.y-currentTarget_.y))<0.1){
+      || (!willReachHome && nearHome)){
         currentPath_ = plan_path_to_home(homePose_, currentPose_, currentMap_, planner_);
         if (currentPath_.path_length > 0)
           currentTarget_ =  currentPath_.path[currentPath_.path_length-1];

@@ -137,6 +137,8 @@ robot_path_t search_for_path(pose_xyt_t start,
       pose_xyt_t first;
       first.x = goal.x;
       first.y = goal.y;
+      int max_len = 8;
+      int i = 0;
       if (isDestinationReached(*cur, dest_node))
       {
         while (cur != nullptr)
@@ -149,13 +151,15 @@ robot_path_t search_for_path(pose_xyt_t start,
           //cur_pose.theta = 0;
           //std::cout<<"First Pose: "<<first.x<<" "<<first.y<<std::endl;
           //std::cout<<"Second Pose: "<<second.x<<" "<<second.y<<std::endl;
-          if (!IsPathFree(first, second, distances, params))
+          if (!IsPathFree(first, second, distances, params) || max_len == i)
           {
             path.path.push_back(second);
             first.x = second.x;
             first.y = second.y;
+            i = 0;
           }
           cur = cur->p;
+          i ++;
         }
         std::reverse(path.path.begin(), path.path.end());
         path.path.push_back(goal);
@@ -178,39 +182,40 @@ robot_path_t search_for_path(pose_xyt_t start,
         return path;
     }
   }
-
-  if (distances(start_point.x, start_point.y) < params.minDistanceToObstacle) {
-      pose_xyt_t fix_location;
-      for (int fix_length = 1; fix_length<4; fix_length++){
-        if (distances(start_point.x + fix_length, start_point.y) > params.minDistanceToObstacle) {
-          fix_location.x = start_point.x + 0.05 * fix_length;
-          fix_location.y = start_point.y;
-          path.path_length = 1;
-          path.path.push_back(fix_location);
-          return path;
-        }
-        if (distances(start_point.x - fix_length, start_point.y) > params.minDistanceToObstacle) {
-          fix_location.x = start_point.x - 0.05 * fix_length;
-          fix_location.y = start_point.y;
-          path.path_length = 1;
-          path.path.push_back(fix_location);
-          return path;
-        }
-        if (distances(start_point.x, start_point.y - fix_length) > params.minDistanceToObstacle) {
-          fix_location.x = start_point.x;
-          fix_location.y = start_point.y - 0.05 *fix_length;
-          path.path_length = 1;
-          path.path.push_back(fix_location);
-          return path;
-        }
-        if (distances(start_point.x, start_point.y + fix_length) > params.minDistanceToObstacle) {
-          fix_location.x = start_point.x;
-          fix_location.y = start_point.y + 0.05 * fix_length;
-          path.path_length = 1;
-          path.path.push_back(fix_location);
-          return path;
-        }
-      }
+  // Point<int> start_point = distances.poseToCell(start.x, start.y);
+  // if (distances(start_point.x, start_point.y) < params.minDistanceToObstacle - 0.05) {
+  //     pose_xyt_t fix_location;
+  //     for (int fix_length = 1; fix_length<4; fix_length++){
+  //       if (distances(start_point.x + fix_length, start_point.y) > params.minDistanceToObstacle) {
+  //         fix_location.x = start_point.x + 0.05 * fix_length;
+  //         fix_location.y = start_point.y;
+  //         path.path_length = 1;
+  //         path.path.push_back(fix_location);
+  //         return path;
+  //       }
+  //       if (distances(start_point.x - fix_length, start_point.y) > params.minDistanceToObstacle) {
+  //         fix_location.x = start_point.x - 0.05 * fix_length;
+  //         fix_location.y = start_point.y;
+  //         path.path_length = 1;
+  //         path.path.push_back(fix_location);
+  //         return path;
+  //       }
+  //       if (distances(start_point.x, start_point.y - fix_length) > params.minDistanceToObstacle) {
+  //         fix_location.x = start_point.x;
+  //         fix_location.y = start_point.y - 0.05 *fix_length;
+  //         path.path_length = 1;
+  //         path.path.push_back(fix_location);
+  //         return path;
+  //       }
+  //       if (distances(start_point.x, start_point.y + fix_length) > params.minDistanceToObstacle) {
+  //         fix_location.x = start_point.x;
+  //         fix_location.y = start_point.y + 0.05 * fix_length;
+  //         path.path_length = 1;
+  //         path.path.push_back(fix_location);
+  //         return path;
+  //       }
+  //     }
+  //   }
 
 
   std::cout << "No valid path.\n";
