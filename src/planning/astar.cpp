@@ -22,6 +22,7 @@ robot_path_t search_for_path(pose_xyt_t start,
   path.utime = start.utime;
   for (int test_thing = 0; test_thing < 2; test_thing++)
   {
+    std::cout << "searching without heuristic: " << test_thing << std::endl;
     std::vector<pose_xyt_t> options;
     options.push_back(goal_in);
     pose_xyt_t edit = goal_in;
@@ -160,10 +161,6 @@ robot_path_t search_for_path(pose_xyt_t start,
         path.path.push_back(goal);
         path.path_length = path.path.size();
       }
-      else
-      {
-        std::cout << "No valid path.\n";
-      }
 
       //destory all new nodes
       while (!open_set.empty())
@@ -173,13 +170,14 @@ robot_path_t search_for_path(pose_xyt_t start,
         delete *it;
       }
 
-      std::cout << "Path returned. Length: " << path.path_length << std::endl;
+      std::cout << "Path given with length: " << path.path_length << std::endl;
 
       //std::cout<<(*iter)->n.x<<" "<<(*iter)->n.y<<" "<<(*iter)->f_score<<std::endl;
       if (path.path_length > 0)
         return path;
     }
   }
+  std::cout << "No valid path.\n";
   return path;
 }
 
@@ -251,7 +249,8 @@ bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
   float y0 = first.y;
   float x1 = second.x;
   float y1 = second.y;
-  float minDist = params.minDistanceToObstacle + 0.015;
+  float minDist = params.minDistanceToObstacle + 0.05;
+
   if (std::abs(y1 - y0) < std::abs(x1 - x0))
   {
     if (x0 > x1)

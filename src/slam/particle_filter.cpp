@@ -16,8 +16,8 @@ void ParticleFilter::initializeFilterAtPose(const pose_xyt_t &pose)
   ///////////// TODO: Implement your method for initializing the particles in the particle filter /////////////////
   //uniformly assigned weight
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0.0, 0.05);
-  std::normal_distribution<double> theta_distribution(0.0, 0.001);
+  std::normal_distribution<double> distribution(0.0, 0.005);
+  std::normal_distribution<double> theta_distribution(0.0, 0.011);
 
   std::cout << pose.x << " " << pose.y << " " << pose.theta << std::endl;
   double w = 1.0 / kNumParticles_;
@@ -47,8 +47,10 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t &odometry,
   // obviously don't do anything.
   // proposal.clear();
   bool hasRobotMoved = actionModel_.updateAction(odometry);
-  if (hasRobotMoved)
+  if (hasRobotMoved) modulo_num++;
+  if (hasRobotMoved  && modulo_num % 5)
   {
+    modulo_num = 0;
     resamplePosteriorDistribution();
     computeProposalDistribution();
     computeNormalizedPosterior(laser, map);
@@ -76,8 +78,8 @@ void ParticleFilter::resamplePosteriorDistribution(void)
 {
   //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0.0, 0.002);
-  std::normal_distribution<double> distribution_theta(0.0, 0.05);
+  std::normal_distribution<double> distribution(0.0, 0.0015);
+  std::normal_distribution<double> distribution_theta(0.0, 0.055);
 
   // std::vector<particle_t> prior;
   // prior.reserve(kNumParticles_);
