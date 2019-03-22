@@ -47,16 +47,16 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t &odometry,
   // obviously don't do anything.
   // proposal.clear();
   bool hasRobotMoved = actionModel_.updateAction(odometry);
-  modulo_num++;
-  if (modulo_num % 2)
-  {
-    modulo_num = 0;
+  // modulo_num++;
+  // if (modulo_num % 2)
+  // {
+    // modulo_num = 0;
     if (hasRobotMoved) {
     resamplePosteriorDistribution();
     computeProposalDistribution();
     computeNormalizedPosterior(laser, map);
     posteriorPose_ = estimatePosteriorPose();
-  }
+  // }
   }
   posteriorPose_.utime = odometry.utime;
 
