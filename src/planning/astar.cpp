@@ -162,6 +162,7 @@ robot_path_t search_for_path(pose_xyt_t start,
         path.path_length = path.path.size();
       }
 
+
       //destory all new nodes
       while (!open_set.empty())
       {
@@ -177,6 +178,41 @@ robot_path_t search_for_path(pose_xyt_t start,
         return path;
     }
   }
+
+  if (distances(start_point.x, start_point.y) < params.minDistanceToObstacle) {
+      pose_xyt_t fix_location;
+      for (int fix_length = 1; fix_length<4; fix_length++){
+        if (distances(start_point.x + fix_length, start_point.y) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x + 0.05 * fix_length;
+          fix_location.y = start_point.y;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+        if (distances(start_point.x - fix_length, start_point.y) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x - 0.05 * fix_length;
+          fix_location.y = start_point.y;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+        if (distances(start_point.x, start_point.y - fix_length) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x;
+          fix_location.y = start_point.y - 0.05 *fix_length;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+        if (distances(start_point.x, start_point.y + fix_length) > params.minDistanceToObstacle) {
+          fix_location.x = start_point.x;
+          fix_location.y = start_point.y + 0.05 * fix_length;
+          path.path_length = 1;
+          path.path.push_back(fix_location);
+          return path;
+        }
+      }
+
+
   std::cout << "No valid path.\n";
   return path;
 }
