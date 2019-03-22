@@ -20,8 +20,8 @@
 
 #define MAX_ANGULAR_SPEED 0.3f
 #define MIN_ANGULAR_SPEED 0.2f
-#define MAX_TRANS_SPEED 0.2f
-#define MIN_TRANS_SPEED 0.06f
+#define MAX_TRANS_SPEED 0.045f
+#define MIN_TRANS_SPEED 0.03f
 #define PI 3.14159265f
 #define MAX_ANGLE_TOLERANCE 0.025f
 
@@ -29,7 +29,7 @@ double MAX_TRANS_TOLERANCE = 2.5;
 double THETA_P = 0.2;
 double THETA_I = 0.01;
 double THETA_D = 0.01;
-double X_P = 0.1;
+double X_P = 0.08;
 double X_I = 0.01;
 double X_D = 0.06;
 std::ofstream csv;
@@ -475,6 +475,7 @@ class MotionController
         x_pid.integrated_error = 0;
         // x_pid.update_set_point(targets_.back());
         state_ = TURN;
+	usleep(500000);
         return !targets_.empty();
     }
 
