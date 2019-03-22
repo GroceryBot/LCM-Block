@@ -47,7 +47,7 @@ Exploration::Exploration(int32_t teamNumber,
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
 
     MotionPlannerParams params;
-    params.robotRadius = 0.20;
+    // params.robotRadius = 0.235;
     planner_.setParams(params);
 }
 
@@ -267,7 +267,8 @@ int8_t Exploration::executeExploringMap(bool initialize)
           prev_frontier_size = frontiers_.size();
         //if(frontiers_.size()>0){
           currentPath_ = plan_path_to_frontier(frontiers_, currentPose_, currentMap_, planner_);
-          currentTarget_ = currentPath_.path[currentPath_.path_length-1];
+          if (currentPath_.path_length > 0)
+            currentTarget_ = currentPath_.path[currentPath_.path_length-1];
         //}
         //std::cout<<"Target: "<<currentTarget_.x<<" "<<currentTarget_.y<<std::endl;
        }
@@ -301,7 +302,7 @@ int8_t Exploration::executeExploringMap(bool initialize)
     else
     {
         //std::cout<<"Wait one iteration.\n";
-        status.status = exploration_status_t::STATUS_FAILED;
+        status.status = exploration_status_t::STATUS_IN_PROGRESS;
     }
 
     lcmInstance_->publish(EXPLORATION_STATUS_CHANNEL, &status);
@@ -369,7 +370,7 @@ int8_t Exploration::executeReturningHome(bool initialize)
     // Else, there's no valid path to follow and we aren't home, so we have failed.
     else
     {
-        status.status = exploration_status_t::STATUS_FAILED;
+        status.status = exploration_status_t::STATUS_IN_PROGRESS;
         std::cout<<"No vaild path and not reached home.\n";
     }
 

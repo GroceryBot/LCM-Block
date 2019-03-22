@@ -249,7 +249,7 @@ bool IsPathFree(pose_xyt_t first, pose_xyt_t second,
   float y0 = first.y;
   float x1 = second.x;
   float y1 = second.y;
-  float minDist = params.minDistanceToObstacle + 0.05;
+  float minDist = params.minDistanceToObstacle + 0.025;
 
   if (std::abs(y1 - y0) < std::abs(x1 - x0))
   {
@@ -289,7 +289,7 @@ float calculateHscore(const Node &n, const Node &dest,
   h *= distances.metersPerCell();
   float cellDistance = distances(n.n.x, n.n.y);
   // cellDistance /= distances.metersPerCell();
-  if (test_thing && cellDistance > params.minDistanceToObstacle) // && cellDistance < params.maxDistanceWithCost)
-    h += pow(cellDistance/params.minDistanceToObstacle, params.distanceCostExponent);
+  if (test_thing && cellDistance > params.minDistanceToObstacle && cellDistance < params.maxDistanceWithCost)
+    h += pow(params.maxDistanceWithCost - cellDistance, params.distanceCostExponent);
   return h;
 }
