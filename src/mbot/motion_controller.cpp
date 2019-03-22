@@ -20,8 +20,8 @@
 
 #define MAX_ANGULAR_SPEED 0.3f
 #define MIN_ANGULAR_SPEED 0.2f
-#define MAX_TRANS_SPEED 0.3f
-#define MIN_TRANS_SPEED 0.05f
+#define MAX_TRANS_SPEED 0.2f
+#define MIN_TRANS_SPEED 0.0f
 #define PI 3.14159265f
 #define MAX_ANGLE_TOLERANCE 0.025f
 
