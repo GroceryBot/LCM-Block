@@ -259,7 +259,7 @@ int8_t Exploration::executeExploringMap(bool initialize)
     frontiers_ = find_map_frontiers(currentMap_, currentPose_);
     if(frontiers_.size()>0){
       // std::cout<<"Number of frontiers: "<<frontiers_.size()<<std::endl;
-       if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0 || frontiers_.size()!=prev_frontier_size){
+       if (!planner_.isPathSafe(currentPath_) ||currentPath_.path.size() == 0 ||currentPath_.path_length == 0 || frontiers_.size()!=prev_frontier_size){
         //  || sqrt((currentPose_.x-currentTarget_.x)*(currentPose_.x-currentTarget_.x) + (currentPose_.y-currentTarget_.y)*(currentPose_.y-currentTarget_.y))<0.1){
         //usleep(100000);
         //planner_.setMap(currentMap_);
@@ -340,10 +340,11 @@ int8_t Exploration::executeReturningHome(bool initialize)
     */
     planner_.setMap(currentMap_);
     planner_.setNumFrontiers(0);
-    if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0
+    if (!planner_.isPathSafe(currentPath_) || currentPath_.path_length == 0 ||currentPath_.path.size() == 0
       || sqrt((homePose_.x-currentTarget_.x)*(homePose_.x-currentTarget_.x) + (homePose_.y-currentTarget_.y)*(homePose_.y-currentTarget_.y))<0.1){
         currentPath_ = plan_path_to_home(homePose_, currentPose_, currentMap_, planner_);
-        currentTarget_ =  currentPath_.path[currentPath_.path_length-1];
+        if (currentPath_.path_length > 0)
+          currentTarget_ =  currentPath_.path[currentPath_.path_length-1];
     }
     std::cout<<"Path length to home: "<<currentPath_.path.size()<<"\n";
     /////////////////////////////// End student code ///////////////////////////////

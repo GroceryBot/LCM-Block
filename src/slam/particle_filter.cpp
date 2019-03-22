@@ -48,7 +48,7 @@ pose_xyt_t ParticleFilter::updateFilter(const pose_xyt_t &odometry,
   // proposal.clear();
   bool hasRobotMoved = actionModel_.updateAction(odometry);
   if (hasRobotMoved) modulo_num++;
-  if (hasRobotMoved  && modulo_num % 5)
+  if (hasRobotMoved && modulo_num % 2)
   {
     modulo_num = 0;
     resamplePosteriorDistribution();
@@ -78,8 +78,8 @@ void ParticleFilter::resamplePosteriorDistribution(void)
 {
   //////////// TODO: Implement your algorithm for resampling from the posterior distribution ///////////////////
   std::default_random_engine generator;
-  std::normal_distribution<double> distribution(0.0, 0.0015);
-  std::normal_distribution<double> distribution_theta(0.0, 0.055);
+  std::normal_distribution<double> distribution(0.0, 0.0035);
+  std::normal_distribution<double> distribution_theta(0.0, 0.07);
 
   // std::vector<particle_t> prior;
   // prior.reserve(kNumParticles_);

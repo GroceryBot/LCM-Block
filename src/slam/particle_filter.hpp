@@ -71,6 +71,7 @@ public:
     * particles retrieves the posterior set of particles being used by the algorithm.
     */
     particles_t particles(void) const;
+    int modulo_num = 0;
 
 private:
 
@@ -89,7 +90,6 @@ private:
     void computeNormalizedPosterior(const lidar_t& laser,
                                                        const OccupancyGrid&   map);
     pose_xyt_t estimatePosteriorPose();
-    int modulo_num = 0;
 };
 
 #endif // SLAM_PARTICLE_FILTER_HPP

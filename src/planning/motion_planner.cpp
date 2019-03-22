@@ -87,8 +87,12 @@ bool MotionPlanner::isPathSafe(const robot_path_t& path) const
 
     // Look at each position in the path, along with any intermediate points between the positions to make sure they are
     // far enough from walls in the occupancy grid to be safe
+    int i = 0;
     for(auto p : path.path)
-    {
+    {   if (i==0){
+      i++;
+      continue;
+    }
         Point<int> cell = distances_.poseToCell(p.x, p.y);
         if(distances_(cell.x, cell.y) < params_.robotRadius - 0.05)
         {
