@@ -21,7 +21,7 @@
 #define MAX_ANGULAR_SPEED 0.3f
 #define MIN_ANGULAR_SPEED 0.2f
 #define MAX_TRANS_SPEED 0.2f
-#define MIN_TRANS_SPEED 0.0f
+#define MIN_TRANS_SPEED 0.06f
 #define PI 3.14159265f
 #define MAX_ANGLE_TOLERANCE 0.025f
 
@@ -29,7 +29,7 @@ double MAX_TRANS_TOLERANCE = 2.5;
 double THETA_P = 0.2;
 double THETA_I = 0.01;
 double THETA_D = 0.01;
-double X_P = 0.13;
+double X_P = 0.1;
 double X_I = 0.01;
 double X_D = 0.06;
 std::ofstream csv;
@@ -286,7 +286,7 @@ class MotionController
                 cmd.angular_v = 0.0f;
                 // Use PIDs to get magnitude of output
 
-                if (angular_error > MAX_ANGLE_TOLERANCE) // turning is linear feedback control
+                if (angular_error > MAX_ANGLE_TOLERANCE*3) // turning is linear feedback control
                 {
                     x_pid.integrated_error = 0;
                     last_trans_speed = 0;
@@ -435,7 +435,7 @@ class MotionController
 
     bool haveReachedTarget(void)
     {
-        const float kPosTolerance = 0.05f;
+        const float kPosTolerance = 0.075f;
         const float kFinalPosTolerance = 0.05f;
 
         //tolerance for intermediate waypoints can be more lenient
@@ -509,7 +509,7 @@ class MotionController
         pose_xyt_t pose;
         pose.x = odomPose.x + odomToGlobalFrame_.x;
         pose.y = odomPose.y + odomToGlobalFrame_.y;
-        pose.theta = odomPose.theta; //+ odomToGlobalFrame_.theta;
+        pose.theta = odomPose.theta+ odomToGlobalFrame_.theta;
         // pose.x = (odomPose.x * std::cos(odomToGlobalFrame_.theta)) - (odomPose.y * std::sin(odomToGlobalFrame_.theta)) + odomToGlobalFrame_.x;
         // pose.y = (odomPose.x * std::sin(odomToGlobalFrame_.theta)) + (odomPose.y * std::cos(odomToGlobalFrame_.theta)) + odomToGlobalFrame_.y;
         // pose.theta = angle_sum(odomPose.theta, odomToGlobalFrame_.theta);
