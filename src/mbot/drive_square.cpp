@@ -5,7 +5,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <cmath>
-
+#include <algorithm>
 int main(int argc, char **argv)
 {
     std::cout << "here" << std::endl;

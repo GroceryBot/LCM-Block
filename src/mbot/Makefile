@@ -6,15 +6,13 @@ LDFLAGS = $(LDFLAGS_STD) $(LDFLAGS_COMMON) $(LDFLAGS_LCMTYPES) $(LDFLAGS_RPLIDAR
 LIBDEPS = $(call libdeps, $(LDFLAGS))
 
 BIN_DRIVE_SQUARE = $(BIN_PATH)/drive_square
-BIN_RPLIDAR_DRIVER = $(BIN_PATH)/rplidar_driver
-BIN_SWEEP_DRIVER = $(BIN_PATH)/sweep_driver
 BIN_MOTION_CONTROLLER = $(BIN_PATH)/motion_controller
 BIN_TIMESYNC = $(BIN_PATH)/timesync
 BIN_WIFI_READER = $(BIN_PATH)/wifi_reader
 BIN_OLED_EXAMPLE = $(BIN_PATH)/oled_example
 BIN_ODOMETRY = $(BIN_PATH)/odometry
 
-ALL = $(BIN_RPLIDAR_DRIVER) $(BIN_SWEEP_DRIVER) $(BIN_WIFI_READER) $(BIN_TIMESYNC) $(BIN_DRIVE_SQUARE) $(BIN_MOTION_CONTROLLER) $(BIN_MC_SMOOTH) $(BIN_OLED_EXAMPLE) $(BIN_ODOMETRY)
+ALL = $(BIN_WIFI_READER) $(BIN_TIMESYNC) $(BIN_DRIVE_SQUARE) $(BIN_MOTION_CONTROLLER) $(BIN_MC_SMOOTH) $(BIN_OLED_EXAMPLE) $(BIN_ODOMETRY)
 
 all: $(ALL)
 
@@ -25,14 +23,6 @@ $(BIN_DRIVE_SQUARE): drive_square.o $(LIBDEPS)
 $(BIN_MOTION_CONTROLLER): motion_controller.o $(LIBDEPS)
 	@echo "    $@"
 	@$(CXX) -o $@ $^ $(LDFLAGS)
-
-$(BIN_RPLIDAR_DRIVER): rplidar_driver.o $(LIBDEPS)
-	@echo "    $@"
-	@$(CXX) -o $@ $^ $(LDFLAGS)
-
-$(BIN_SWEEP_DRIVER): sweep_driver.o $(LIBDEPS)
-	@echo "    $@"
-	@$(CXX) -o $@ $^ $(LDFLAGS) $(LIB_PATH)/libsweep.so
 
 $(BIN_TIMESYNC): timesync.o $(LIBDEPS)
 	@echo "    $@"
