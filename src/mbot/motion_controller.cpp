@@ -14,180 +14,33 @@
 #include <algorithm>
 #include <iostream>
 #include <cassert>
-#include <unistd.h>
 #include <signal.h>
-#include <fstream>
+#include <math.h>
 
-#define MAX_ANGULAR_SPEED 1.0f
-#define MIN_ANGULAR_SPEED 0.3f
-#define MAX_TRANS_SPEED 0.75f
-#define MIN_TRANS_SPEED 0.05f
-#define PI 3.14159265f
-#define MAX_ANGLE_TOLERANCE 0.025f
-
-double MAX_TRANS_TOLERANCE = 2.5;
-double THETA_P = 0.65;
-double THETA_I = 0.0;
-double THETA_D = 0.06;
-double X_P = 0.13;
-double X_I = 0.00;
-double X_D = 0.06;
-std::ofstream csv;
-
-class PIDController
+#define PI 3.14159265358979323846
+float clamp_speed(float speed)
 {
-  public:
-    PIDController() {}
-
-    PIDController(float _gainP, float _gainI, float _gainD, pose_xyt_t _set_point, pose_xyt_t current_pose)
+    if(speed < -1.0f)
     {
-        /* Construct a PID controller. */
-        gainP = _gainP;
-        // gainI uses microseconds, so to use reasonable numbers we divide.
-        gainI = _gainI;
-        gainD = _gainD;
-
-        last_pose = current_pose;
-        integrated_error = 0;
-        set_point = _set_point;
+        return -1.0f;
     }
-
-    void update_set_point(pose_xyt_t _set_point)
+    else if(speed > 1.0f)
     {
-        /* Change the PID controller's set point. */
-        set_point = _set_point;
-    }
-
-    double getNextAngularVelocity(pose_xyt_t current_pose)
-    {
-        /* Get the drive direction in the form of a pose.
-         *
-         * Though a pose is a convenient representation, the return value doesn't
-         * represent a robot pose, but instead the arc the robot should travel on
-         * (determined by normalized x, y, and theta), and the speed at which it
-         * should drive (determined by the magnitude of the vector).
-         */
-
-        // Calculate dx, dy, dt, d0
-        double current_theta_err = angle_diff(set_point.theta, current_pose.theta);
-        double dt = (current_pose.utime - last_pose.utime) / 1000000.0;
-
-        double last_theta_err = angle_diff(set_point.theta, last_pose.theta);
-        double diff_err = current_theta_err - last_theta_err;
-        // update member variables
-        last_pose = current_pose;
-
-        integrated_error += current_theta_err * dt;
-
-        double output;
-        output = current_theta_err * gainP;
-        output += integrated_error * gainI;
-        output += diff_err / dt * gainD;
-        csv << output << "," << current_theta_err << "," << integrated_error << "," << diff_err << std::endl;
-        return output;
-    }
-
-    double getNextTransVelocity(pose_xyt_t current_pose)
-    {
-        /* Get the drive direction in the form of a pose.
-         *
-         * Though a pose is a convenient representation, the return value doesn't
-         * represent a robot pose, but instead the arc the robot should travel on
-         * (determined by normalized x, y, and theta), and the speed at which it
-         * should drive (determined by the magnitude of the vector).
-         */
-
-        // Calculate dx, dy, dt, d0
-        double current_distance_err = distance(current_pose, set_point);
-        double dt = (current_pose.utime - last_pose.utime) / 1000000.0;
-
-        double last_distance_err = distance(last_pose, set_point);
-        double diff_err = current_distance_err - last_distance_err;
-        // update member variables
-        last_pose = current_pose;
-
-        integrated_error += current_distance_err * dt;
-
-        double output;
-        output = current_distance_err * gainP;
-        output += integrated_error * gainI;
-        output += diff_err / dt * gainD;
-
-        if (current_distance_err < 0.1)
-        {
-            output = current_distance_err;
-        }
-
-        return output;
-    }
-
-    double distance(pose_xyt_t start, pose_xyt_t end)
-    {
-        return sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2) * 1.0);
-    }
-
-  public:
-    double integrated_error;
-
-  private:
-    float gainP;
-    float gainI;
-    float gainD;
-    pose_xyt_t last_pose;
-    pose_xyt_t set_point;
-};
-
-float clamp_speed_trans(float speed)
-{
-    if (speed > 0 && speed < MIN_TRANS_SPEED)
-    {
-        return MIN_TRANS_SPEED;
-    }
-    if (speed < 0 && speed > -MIN_TRANS_SPEED)
-    {
-        return -MIN_TRANS_SPEED;
-    }
-    if (speed < -MAX_TRANS_SPEED)
-    {
-        return -MAX_TRANS_SPEED;
-    }
-    else if (speed > MAX_TRANS_SPEED)
-    {
-        return MAX_TRANS_SPEED;
+        return 1.0f;
     }
 
     return speed;
 }
 
-float clamp_speed_angular(float speed)
-{
-    if (speed > 0 && speed < MIN_ANGULAR_SPEED)
-    {
-        return MIN_ANGULAR_SPEED;
-    }
-    if (speed < 0 && speed > -MIN_ANGULAR_SPEED)
-    {
-        return -MIN_ANGULAR_SPEED;
-    }
-    if (speed < -MAX_ANGULAR_SPEED)
-    {
-        return -MAX_ANGULAR_SPEED;
-    }
-    else if (speed > MAX_ANGULAR_SPEED)
-    {
-        return MAX_ANGULAR_SPEED;
-    }
-
-    return speed;
-}
 
 class MotionController
 {
-  public:
+public:
+
     /**
     * Constructor for MotionController.
     */
-    MotionController(lcm::LCM *instance) : lcmInstance(instance)
+    MotionController(lcm::LCM * instance) : lcmInstance(instance)
     {
         ////////// TODO: Initialize your controller state //////////////
 
@@ -196,20 +49,12 @@ class MotionController
         odomToGlobalFrame_.y = 0.0f;
         odomToGlobalFrame_.theta = 0.0f;
 
-        time_offset = 0;
-        timesync_initialized_ = false;
+	    time_offset = 0;
+	    timesync_initialized_ = false;
 
         confirm.utime = 0;
         confirm.creation_time = 0;
         confirm.channel = "";
-
-        pose_xyt_t pose;
-        pose.utime = pose.x = pose.y = pose.theta = 0;
-        odomTrace_.addPose(pose);
-        targets_.push_back(pose);
-
-        theta_pid = PIDController(THETA_P, THETA_I, THETA_D, pose, pose);
-        x_pid = PIDController(X_P, X_I, X_D, pose, pose);
     }
 
     /**
@@ -221,233 +66,210 @@ class MotionController
     */
     mbot_motor_command_t updateCommand(void)
     {
+        //////////// TODO: Implement your feedback controller here. //////////////////////
+        // Use the data from odomTrace_ to update the next pose, odomTrace_ is a vector of type pose_xyt_t
+
+        //initialization of motor command
         mbot_motor_command_t cmd;
         cmd.trans_v = 0.0f;
         cmd.angular_v = 0.0f;
         cmd.utime = now();
+        if(targets_.empty()){
+            return cmd;
+        }
 
-        // Check if reaches target according to odometry
-        if (haveReachedTarget())
+        if(haveReachedTarget())
         {
-            last_trans_speed = 0;
-            std::cout << "--------------------\n";
             std::cout << "TARGET REACHED\n";
             bool haveTarget = assignNextTarget();
-            if (!haveTarget)
+
+            if(!haveTarget)
             {
-                std::cout << "--------------------\n";
                 std::cout << "COMPLETED PATH!\n";
+                return cmd;
             }
         }
 
-        //////////////// Actual PID control codes goes in here ////////////////
-        else if (!targets_.empty() && !odomTrace_.empty())
-        {
-            // Use feedback based on heading error for line-of-sight vector pointing to the target.
-            // Convert odometry to the global coordinates
-            pose_xyt_t target = targets_.back();
-            pose_xyt_t pose = currentPose();
 
-            // calculate target heading
-            target.theta = atan2((target.y - pose.y), (target.x - pose.x));
-            double angular_error = angle_diff_abs(target.theta, pose.theta);
+        // Use feedback based on heading error for line-of-sight vector pointing to the target.
+        pose_xyt_t target = targets_.back();
 
-            if (state_ == TURN) // if the car is in turning mode (no translational velocity)
-            {
-                last_trans_speed = 0;
-                cmd.trans_v = 0;
-                if (angular_error > MAX_ANGLE_TOLERANCE) // turning is linear feedback control
-                {
-                    theta_pid.update_set_point(target);
-                    double angular_velocity_pid = theta_pid.getNextAngularVelocity(pose);
+        //Make target longer to reach
+        //target.x *= 1.1;
+        //target.y *= 1.1;
+        // Convert odometry to the global coordinates
+        pose_xyt_t pose = currentPose();
 
-                    // std::cout << "ACC ANGULAR: " << std::abs((1.0 * angular_velocity_pid) - (1.0 * last_angular_speed)) << std::endl;
-                    // if (std::abs((1.0 * angular_velocity_pid) - (1.0 * last_angular_speed)) > 0.05)
-                    // {
-                    //     if (angular_velocity_pid > last_angular_speed)
-                    //     {
-                    //         angular_velocity_pid = last_angular_speed + 0.05;
-                    //     }
-                    //     else
-                    //     {
-                    //         angular_velocity_pid = last_angular_speed - 0.05;
-                    //     }
-                    // }
-                    cmd.angular_v = clamp_speed_angular(angular_velocity_pid);
-                }
-                else
-                {
-                    theta_pid.integrated_error = 0;
-                    state_ = DRIVE;
-                }
+        target.theta = atan2((pose.y-target.y), (pose.x-target.x));
+        if (target.theta>0){
+            target.theta -= M_PI;
+        }
+        else{
+             target.theta += M_PI;
+        }
+        std::cout<<"atan theta: "<<target.theta<<std::endl;
+
+
+        if(new_path_received_){
+            new_path_received_ = false;
+            end_time_ = now()+100000000; //timeout period
+        }
+        if(end_time_ > now()){
+            std::cout<<"POSE: x, y, theta: "<<pose.x<<" "<<pose.y<<" "<<pose.theta<<std::endl;
+            std::cout<<"TARGET: x, y, theta: "<<target.x<<" "<<target.y<<" "<<target.theta<<std::endl;
+    	    float ang_tolerance = (turn90) ? 0.05 : 0.1;
+    	    std::cout<<"Angle tolerance: "<<ang_tolerance<<std::endl;
+
+            if(std::abs(target.theta - pose.theta)<ang_tolerance){
+                state_=State::DRIVE;
+                std::cout<<"State: drive.\n";
+                turn90 = false;
             }
-            else if (state_ == DRIVE) // Use PID to drive to the target once approximately pointed in the correct direction
-            {
+            else{
+                state_=State::TURN;
+                std::cout<<"State: turn.\n";
+            }
+
+            if(state_== State::TURN){
+                //TODO: maybe change trans_v not 0 when turning
+                cmd.trans_v = 0.08f;
+                cmd.angular_v = clamp_speed(turn_pid(target, pose));
+                std::cout<<"AV command: "<<cmd.angular_v<<std::endl;
+            }
+            else if(state_ == State::DRIVE){
                 cmd.angular_v = 0.0f;
-                // Use PIDs to get magnitude of output
-
-                if (angular_error > MAX_ANGLE_TOLERANCE * 8) // turning is linear feedback control
-                {
-                    x_pid.integrated_error = 0;
-                    last_trans_speed = 0;
-                    state_ = TURN;
-                }
-                else
-                {
-                    // theta_pid.update_set_point(target);
-                    // double angular_velocity_pid = theta_pid.getNextAngularVelocity(pose);
-                    // cmd.angular_v = clamp_speed(angular_velocity_pid);
-                    double trans_speed = x_pid.getNextTransVelocity(pose);
-                    if (trans_speed < 0)
-                    {
-                        std::cout << "NEGATIVE VALUE" << std::endl;
-                        std::cout << last_trans_speed << std::endl;
-                        std::cout << trans_speed << std::endl;
-                        std::cout << "_______________" << std::endl;
-                    }
-                    if (std::abs((1.0 * trans_speed) - (1.0 * last_trans_speed)) > 0.0005)
-                    {
-                        std::cout << "ACC : " << std::abs((1.0 * trans_speed) - (1.0 * last_trans_speed)) << std::endl;
-                        if (trans_speed > 0 && last_trans_speed < 0)
-                        {
-                            trans_speed = 0.0005;
-                        }
-                        else if (trans_speed < 0 && last_trans_speed > 0)
-                        {
-                            trans_speed = 0.0005;
-                        }
-                        else if (trans_speed > last_trans_speed)
-                        {
-                            trans_speed = last_trans_speed + 0.0005;
-                        }
-                        else
-                        {
-                            trans_speed = last_trans_speed - 0.0005;
-                        }
-                    }
-                    cmd.trans_v = clamp_speed_trans(trans_speed);
-                    std::cout << "OUTPUT: " << cmd.trans_v << std::endl;
-                }
+                cmd.trans_v = clamp_speed(drive_pid(target, pose));
+                std::cout<<"TV command: "<<cmd.trans_v<<std::endl;
             }
-            else
-            {
-                std::cerr << "ERROR: MotionController: Entered unknown state: " << state_ << '\n';
-            }
-            // std::cout << "Moving to  : " << target.x << " " << target.y << " " << target.theta << std::endl;
-            // std::cout << "Moving from: " << pose.x << " " << pose.y << " " << pose.theta << std::endl;
-            // std::cout << "trans_v: " << cmd.trans_v << " angular_v: " << cmd.angular_v << std::endl;
-            // std::string state_string = state_ == DRIVE ? "DRIVE" : "TURN";
-            // std::cout << "in state: " << state_string << std::endl;
-            // std::cout << "---------" << std::endl;
         }
-        // if targets or odomTrace is not initialized, command the robot to do nothing
-        last_trans_speed = cmd.trans_v;
-        last_angular_speed = cmd.angular_v;
+        else{
+        std::cout<<"TIME OUT!!!\n";
+        }
         return cmd;
     }
 
-    float distance(pose_xyt_t start, pose_xyt_t end)
-    {
-        return sqrt(pow(end.x - start.x, 2) + pow(end.y - start.y, 2) * 1.0);
-    }
+    bool timesync_initialized(){ return timesync_initialized_; }
 
-    bool timesync_initialized() { return timesync_initialized_; }
-
-    void handleTimesync(const lcm::ReceiveBuffer *buf, const std::string &channel, const timestamp_t *timesync)
-    {
+    void handleTimesync(const lcm::ReceiveBuffer* buf, const std::string& channel, const timestamp_t* timesync){
         timesync_initialized_ = true;
-        time_offset = timesync->utime - utime_now();
+        time_offset = timesync->utime-utime_now();
     }
 
-    void handlePath(const lcm::ReceiveBuffer *buf, const std::string &channel, const robot_path_t *path)
+    void handlePath(const lcm::ReceiveBuffer* buf, const std::string& channel, const robot_path_t* path)
     {
-        // clear old path
-        targets_.clear();
-
-        // assigns targets to vector of poses corresponding to path
+        /////// TODO: Implement your handler for new paths here ////////////////////
         targets_ = path->path;
-        std::reverse(targets_.begin(), targets_.end());
-
-        std::cout << "received new path at time: " << path->utime << "\n";
-        for (auto pose : targets_)
-        {
-            std::cout << "(" << pose.x << "," << pose.y << "," << pose.theta << "); ";
-        }
-        std::cout << "\n";
+        //targets_.erase(targets_.begin());
+        //std::reverse(targets_.begin(), targets_.end());
+    	std::cout << "received new path at time: " << path->utime << "\n";
+    	for(auto pose : targets_){
+    		std::cout << "(" << pose.x << "," << pose.y << "," << pose.theta << "); ";
+    	}std::cout << "\n";
+        new_path_received_ = true;
 
         confirm.utime = now();
         confirm.creation_time = path->utime;
         confirm.channel = channel;
-        state_ = TURN;
 
         //confirm that the path was received
         lcmInstance->publish(MESSAGE_CONFIRMATION_CHANNEL, &confirm);
     }
 
-    void handleOdometry(const lcm::ReceiveBuffer *buf, const std::string &channel, const odometry_t *odometry)
+    void handleOdometry(const lcm::ReceiveBuffer* buf, const std::string& channel, const odometry_t* odometry)
     {
         /////// TODO: Implement your handler for new odometry data ////////////////////
-        // done
         pose_xyt_t pose;
-        pose.utime = odometry->utime;
         pose.x = odometry->x;
         pose.y = odometry->y;
         pose.theta = odometry->theta;
+        pose.utime = odometry->utime;
         odomTrace_.addPose(pose);
+        currentFV = odometry->fwd_velocity;
+        currentAV = odometry->ang_velocity;
     }
 
-    void handlePose(const lcm::ReceiveBuffer *buf, const std::string &channel, const pose_xyt_t *pose)
+    void handlePose(const lcm::ReceiveBuffer* buf, const std::string& channel, const pose_xyt_t* pose)
     {
+        //std::cout<<"SLAM data: "<<pose->x<<" "<<pose->y<<" "<<pose->theta<<std::endl;
+        //std::cout<<"Time diff: "<<now()-pose->utime<<std::endl;
         computeOdometryOffset(*pose);
     }
 
-  private:
+private:
+
     enum State
     {
         TURN,
         DRIVE,
     };
 
-    pose_xyt_t odomToGlobalFrame_; // transform to convert odometry into the global/map coordinates for navigating in a map
-    PoseTrace odomTrace_;          // trace of odometry for maintaining the offset estimate
+    pose_xyt_t odomToGlobalFrame_;      // transform to convert odometry into the global/map coordinates for navigating in a map
+    PoseTrace  odomTrace_;              // trace of odometry for maintaining the offset estimate
     std::vector<pose_xyt_t> targets_;
-    int64_t end_time_ = 0;
 
-    double last_trans_speed = 0;
-    double last_angular_speed = 0;
     // State of the motion controller
-    State state_ = TURN;
+    State state_ = State::TURN;
 
-    // One PID controller for distance, one for theta
-    PIDController theta_pid;
-    PIDController x_pid;
-
-    bool timesync_initialized_;
     int64_t time_offset;
 
-    message_received_t confirm;
-    lcm::LCM *lcmInstance;
+    bool timesync_initialized_;
 
-    int64_t now()
-    {
+    message_received_t confirm;
+    lcm::LCM * lcmInstance;
+
+    bool new_path_received_ = false;
+    int64_t end_time_ = 0;
+
+    const float Kp_drive = 0.3f;
+    const float Ki_drive = 0.0f;
+    const float Kd_drive = 0.2f;
+
+    const float Kp_angular = 1.5f;
+    const float Ki_angular = 0.0f;
+    const float Kd_angular = 1.0f;
+    bool turn90 = false;
+
+    float currentFV = 0.0;
+    float currentAV = 0.0;
+    float Ui_turn = 0.0;
+    float Ui_drive = 0.0;
+    int64_t now(){
         return utime_now() + time_offset;
+    }
+
+
+    float turn_pid(const pose_xyt_t& target, const pose_xyt_t& current){
+        float Up = Kp_angular*clamp_radians(target.theta - current.theta);
+        std::cout<<"Current AV: "<<currentAV<<std::endl;
+        float Ud = Kd_angular*(-currentAV);
+        Ui_turn += Ki_angular*clamp_radians(target.theta - current.theta);
+        return Up+Ud+Ui_turn;
+    }
+
+
+    float drive_pid(const pose_xyt_t& target, const pose_xyt_t& current){
+        float e = sqrt((target.x - current.x)*(target.x - current.x) + (target.y - current.y)*(target.y - current.y));
+        float Up = Kp_drive*(e);
+        float Ud = Kd_drive*(0.08-currentFV);
+        Ui_drive += Ki_drive*e;
+        return Up+Ud+Ui_drive;
     }
 
     bool haveReachedTarget(void)
     {
         const float kPosTolerance = 0.1f;
-        const float kFinalPosTolerance = 0.1f;
+	    const float kFinalPosTolerance = 0.05f;
 
         //tolerance for intermediate waypoints can be more lenient
-        float tolerance = (targets_.size() == 1) ? kFinalPosTolerance : kPosTolerance;
+    	float tolerance = (targets_.size() == 1) ? kFinalPosTolerance : kPosTolerance;
 
         // There's no target, so we're there by default.
-        if (targets_.empty())
+        if(targets_.empty())
         {
             return false;
         }
         // If there's no odometry, then we're nowhere, so we couldn't be at a target
-        if (odomTrace_.empty())
+        if(odomTrace_.empty())
         {
             return false;
         }
@@ -457,49 +279,31 @@ class MotionController
 
         float xError = std::abs(target.x - pose.x);
         float yError = std::abs(target.y - pose.y);
-
         return (xError < tolerance) && (yError < tolerance);
     }
 
     bool assignNextTarget(void)
     {
         // If there was a target, remove it
-        if (!targets_.empty())
+        if(!targets_.empty())
         {
             targets_.pop_back();
         }
-
-        theta_pid.update_set_point(targets_.back());
-        theta_pid.integrated_error = 0;
-        x_pid.update_set_point(targets_.back());
-        x_pid.integrated_error = 0;
-        // x_pid.update_set_point(targets_.back());
-        state_ = TURN;
+        // TODO: Reset all error and state terms when switching to a new target
+        state_ = State::TURN;
+        Ui_turn = 0.0;
+        Ui_drive = 0.0;
+        turn90 = true;
         return !targets_.empty();
     }
 
-    void computeOdometryOffset(const pose_xyt_t &globalPose)
+    void computeOdometryOffset(const pose_xyt_t& globalPose)
     {
         /////// TODO: Implement your handler for new pose data ////////////////////
-        // odomToGlobalFrame_.x = 0;
-        // odomToGlobalFrame_.y = 0;
-        // odomToGlobalFrame_.theta = 0;
-        //pose_xyt_t odomAtTime = odomTrace_.poseAt(globalPose.utime + time_offset);
-        // double deltaTheta = angle_diff(odomAtTime.theta, globalPose.theta);
-        // double xOdomRotated = (odomAtTime.x * std::cos(deltaTheta)) - (odomAtTime.y * std::sin(deltaTheta));
-        // double yOdomRotated = (odomAtTime.x * std::sin(deltaTheta)) + (odomAtTime.y * std::cos(deltaTheta));
-        //odomToGlobalFrame_.x = globalPose.x - odomAtTime.x;
-        //odomToGlobalFrame_.y = globalPose.y - odomAtTime.y;
-        //odomToGlobalFrame_.theta = -odomAtTime.theta + globalPose.theta;
-
-        pose_xyt_t pose_t = odomTrace_.poseAt(globalPose.utime + time_offset);
+        pose_xyt_t pose_t = odomTrace_.poseAt(globalPose.utime+time_offset);
         odomToGlobalFrame_.x = -pose_t.x + globalPose.x;
         odomToGlobalFrame_.y = -pose_t.y + globalPose.y;
         odomToGlobalFrame_.theta = -pose_t.theta + globalPose.theta;
-
-        //std::cout << "ODOMETRY OFFSET" << std::endl;
-        //std::cout << "X: " << odomToGlobalFrame_.x << " Y: " << odomToGlobalFrame_.y << " TH: " << odomToGlobalFrame_.theta << std::endl;
-        //std::cout << "_____________" << std::endl;
     }
 
     pose_xyt_t currentPose(void)
@@ -507,36 +311,31 @@ class MotionController
         assert(!odomTrace_.empty());
         pose_xyt_t odomPose = odomTrace_.back();
         pose_xyt_t pose;
-        pose.x = odomPose.x + odomToGlobalFrame_.x;
-        pose.y = odomPose.y + odomToGlobalFrame_.y;
-        pose.theta = odomPose.theta; //+ odomToGlobalFrame_.theta;
-        // pose.x = (odomPose.x * std::cos(odomToGlobalFrame_.theta)) - (odomPose.y * std::sin(odomToGlobalFrame_.theta)) + odomToGlobalFrame_.x;
-        // pose.y = (odomPose.x * std::sin(odomToGlobalFrame_.theta)) + (odomPose.y * std::cos(odomToGlobalFrame_.theta)) + odomToGlobalFrame_.y;
-        // pose.theta = angle_sum(odomPose.theta, odomToGlobalFrame_.theta);
+        pose.x = odomPose.x+odomToGlobalFrame_.x;
+        pose.y = odomPose.y+odomToGlobalFrame_.y;
+        pose.theta = odomPose.theta+odomToGlobalFrame_.theta;
         pose.utime = now();
+        // TODO: Implement transform from odom frame to slam frame
         return pose;
     }
+
+     float clamp_radians(float angle){
+        if(angle < -PI)
+        {
+            for(; angle < -PI; angle += 2.0*PI);
+        }
+        else if(angle > PI)
+        {
+            for(; angle > PI; angle -= 2.0*PI);
+        }
+        return angle;
+    }
+
 };
 
-int main(int argc, char **argv)
-{
 
-    csv.open("pid.csv");
-    if (argc == 7)
-    {
-        X_P = atof(argv[1]);
-        X_I = atof(argv[2]);
-        X_D = atof(argv[3]);
-        std::cout << "X_P: " << X_P << std::endl;
-        std::cout << "X_I: " << X_I << std::endl;
-        std::cout << "X_D: " << X_D << std::endl;
-        THETA_P = atof(argv[4]);
-        THETA_I = atof(argv[5]);
-        THETA_D = atof(argv[6]);
-        std::cout << "THETA_P: " << THETA_P << std::endl;
-        std::cout << "THETA_I: " << THETA_I << std::endl;
-        std::cout << "THETA_D: " << THETA_D << std::endl;
-    }
+int main(int argc, char** argv)
+{
     lcm::LCM lcmInstance(MULTICAST_URL);
 
     MotionController controller(&lcmInstance);
@@ -547,16 +346,15 @@ int main(int argc, char **argv)
 
     signal(SIGINT, exit);
 
-    while (true)
+    while(true)
     {
-        lcmInstance.handleTimeout(50); // update at 20Hz minimum
+        lcmInstance.handleTimeout(50);  // update at 20Hz minimum
 
-        if (controller.timesync_initialized())
-        {
+    	if(controller.timesync_initialized()){
             mbot_motor_command_t cmd = controller.updateCommand();
 
             lcmInstance.publish(MBOT_MOTOR_COMMAND_CHANNEL, &cmd);
-        }
+    	}
     }
 
     return 0;
