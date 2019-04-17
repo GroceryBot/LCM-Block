@@ -221,12 +221,12 @@ private:
     int64_t end_time_ = 0;
 
     const float Kp_drive = 0.03f;
-    const float Ki_drive = 0.002f;
+    const float Ki_drive = 0.0005f;
     const float Kd_drive = 0.001f;
 
-    const float Kp_angular = 0.3f;
-    const float Ki_angular = 0.0f;
-    const float Kd_angular = 0.05f;
+    const float Kp_angular = 0.2f;
+    const float Ki_angular = 0.001f;
+    const float Kd_angular = 0.001f;
     bool turn90 = false;
 
     float currentFV = 0.0;

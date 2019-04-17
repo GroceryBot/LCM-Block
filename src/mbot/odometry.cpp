@@ -45,8 +45,13 @@ class Odometry
     *
     *******************************************************************************/
     void handleIMU(const lcm::ReceiveBuffer* buf, const std::string& channel, const mbot_imu_t* msg){
-        delta_imu_theta_ = prev_imu_theta_ - msg->tb_angles[0];
-        prev_imu_theta_ = msg->tb_angles[0];
+        delta_imu_theta_ =msg->tb_angles[2] - prev_imu_theta_;
+        prev_imu_theta_ = msg->tb_angles[2];
+        // std::cout << "0: " << msg->tb_angles[0] << std::endl;
+        // std::cout << "1: " << msg->tb_angles[1] << std::endl;
+        // std::cout << "2: " << msg->tb_angles[2] << std::endl;
+
+        // std::cout << "IMU :" << delta_imu_theta_ << " : " << prev_imu_theta_ << std::endl;
     }
 
     void handleEncoders(const lcm::ReceiveBuffer* buf, const std::string& channel, const mbot_encoder_t* msg){
@@ -74,15 +79,19 @@ class Odometry
         float dx = 0.5 * (dleft + dright);
         float dy = 0;
         float d0 = 1/LengthBetweenTwoWheels * (dright - dleft);
-        std::cout<<"d0 "<<d0<<std::endl;
+        // std::cout<<"d0 "<<d0<<std::endl;
         int64_t dt = msg->utime - last_time_;
-        if(std::abs(msg->left_delta - msg->right_delta) > 60){
-            std::cout << "\n asdfasdf" << std::endl;
-            //d0 = delta_imu_theta_ + 0.01;
+        // if(std::abs(msg->left_delta - msg->right_delta) > 60){
+        //     // std::cout << "\n d0 IMU : " << delta_imu_theta_ <<std::endl;
+        //     d0 = delta_imu_theta_;
+        // }
+        if(std::abs(delta_imu_theta_) > 0.005){
+            std::cout << "\n d0 IMU : " << delta_imu_theta_ <<std::endl;
+            d0 = delta_imu_theta_;
         }
 
         theta_ += d0;
-        std::cout << "\n qwer Theta "<<theta_<<std::endl;
+        // std::cout << "\n qwer Theta "<<theta_<<std::endl;
         x_ += dx * cos(theta_) - dy * sin(theta_);
         y_ += dx * sin(theta_) + dy * cos(theta_);
 
@@ -96,10 +105,10 @@ class Odometry
         odom_msg.right_velocity = dright / dt;
         odom_msg.fwd_velocity = dx / dt;
         odom_msg.ang_velocity = d0 / dt;
-        
+        odom_msg.theta = theta_;
         lcm_instance_->publish(ODOMETRY_CHANNEL, &odom_msg);
 
-        printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
+        // printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
     }
 
 
