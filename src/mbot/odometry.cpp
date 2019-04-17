@@ -8,6 +8,7 @@
 #include <mbot/mbot_channels.h>
 #include <mbot/mbot_defs.h>
 #include <lcmtypes/odometry_t.hpp>
+#include <lcmtypes/mbot_imu_t.hpp>
 #include <lcmtypes/mbot_encoder_t.hpp>
 #include <lcmtypes/reset_odometry_t.hpp>
 #include <common/lcm_config.h>
@@ -22,8 +23,9 @@ class Odometry
 {
   private:
     lcm::LCM* lcm_instance_;
-    float x_, y_, theta_;
+    float x_, y_, theta_, prev_imu_theta_, delta_imu_theta_;
     int64_t last_time_;
+
 
   public:
     /*******************************************************************************
@@ -32,7 +34,7 @@ class Odometry
     * TODO: initialize odometry
     *
     *******************************************************************************/
-    Odometry(lcm::LCM* lcm_instance) : lcm_instance_(lcm_instance), x_(0), y_(0), theta_(0), last_time_(0) {}
+    Odometry(lcm::LCM* lcm_instance) : lcm_instance_(lcm_instance), x_(0), y_(0), theta_(0), delta_imu_theta_(0), last_time_(0) {}
 
 
     /*******************************************************************************
@@ -42,6 +44,11 @@ class Odometry
     *       publish new odometry to lcm ODOMETRY_CHANNEL
     *
     *******************************************************************************/
+    void handleIMU(const lcm::ReceiveBuffer* buf, const std::string& channel, const mbot_imu_t* msg){
+        delta_imu_theta_ = prev_imu_theta_ - msg->tb_angles[0];
+        prev_imu_theta_ = msg->tb_angles[0];
+    }
+
     void handleEncoders(const lcm::ReceiveBuffer* buf, const std::string& channel, const mbot_encoder_t* msg){
         // Skip the first encoder reading
         if (last_time_ == 0)
@@ -67,9 +74,15 @@ class Odometry
         float dx = 0.5 * (dleft + dright);
         float dy = 0;
         float d0 = 1/LengthBetweenTwoWheels * (dright - dleft);
+        std::cout<<"d0 "<<d0<<std::endl;
         int64_t dt = msg->utime - last_time_;
+        if(std::abs(msg->left_delta - msg->right_delta) > 60){
+            std::cout << "\n asdfasdf" << std::endl;
+            //d0 = delta_imu_theta_ + 0.01;
+        }
 
         theta_ += d0;
+        std::cout << "\n qwer Theta "<<theta_<<std::endl;
         x_ += dx * cos(theta_) - dy * sin(theta_);
         y_ += dx * sin(theta_) + dy * cos(theta_);
 
@@ -83,7 +96,7 @@ class Odometry
         odom_msg.right_velocity = dright / dt;
         odom_msg.fwd_velocity = dx / dt;
         odom_msg.ang_velocity = d0 / dt;
-        odom_msg.theta = theta_;
+        
         lcm_instance_->publish(ODOMETRY_CHANNEL, &odom_msg);
 
         printf("x: %f\ny: %f\ntheta: %f", x_, y_, theta_);
@@ -141,6 +154,7 @@ int main(int argc, char** argv)
 
     Odometry odom(&lcmInstance);
     lcmInstance.subscribe(MBOT_ENCODERS_CHANNEL, &Odometry::handleEncoders, &odom);
+    lcmInstance.subscribe(MBOT_IMU_CHANNEL, &Odometry::handleIMU, &odom);
     lcmInstance.subscribe(RESET_ODOMETRY_CHANNEL, &Odometry::handleOdometryReset, &odom);
 
     signal(SIGINT, exit);

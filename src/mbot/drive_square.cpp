@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     }
 
     nextPose.x = 1.0f;
-    nextPose.y = 1.0f;
+    nextPose.y = 1.0;
     nextPose.theta = 0;
     for (int n = 0; n < numTimes; ++n)
     {

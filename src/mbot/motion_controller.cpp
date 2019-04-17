@@ -220,13 +220,13 @@ private:
     bool new_path_received_ = false;
     int64_t end_time_ = 0;
 
-    const float Kp_drive = 0.3f;
-    const float Ki_drive = 0.0f;
-    const float Kd_drive = 0.2f;
+    const float Kp_drive = 0.03f;
+    const float Ki_drive = 0.002f;
+    const float Kd_drive = 0.001f;
 
-    const float Kp_angular = 1.5f;
+    const float Kp_angular = 0.3f;
     const float Ki_angular = 0.0f;
-    const float Kd_angular = 1.0f;
+    const float Kd_angular = 0.05f;
     bool turn90 = false;
 
     float currentFV = 0.0;
@@ -250,15 +250,15 @@ private:
     float drive_pid(const pose_xyt_t& target, const pose_xyt_t& current){
         float e = sqrt((target.x - current.x)*(target.x - current.x) + (target.y - current.y)*(target.y - current.y));
         float Up = Kp_drive*(e);
-        float Ud = Kd_drive*(0.08-currentFV);
+        float Ud = Kd_drive*(currentFV);
         Ui_drive += Ki_drive*e;
         return Up+Ud+Ui_drive;
     }
 
     bool haveReachedTarget(void)
     {
-        const float kPosTolerance = 0.1f;
-	    const float kFinalPosTolerance = 0.05f;
+        const float kPosTolerance = 0.25f;
+	    const float kFinalPosTolerance = 0.15f;
 
         //tolerance for intermediate waypoints can be more lenient
     	float tolerance = (targets_.size() == 1) ? kFinalPosTolerance : kPosTolerance;
