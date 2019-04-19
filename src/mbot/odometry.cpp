@@ -14,6 +14,7 @@
 #include <common/lcm_config.h>
 #include <lcm/lcm-cpp.hpp>
 #include <math.h>
+#include <cmath>
 #include <signal.h>
 #include <iostream>
 

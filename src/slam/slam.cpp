@@ -47,7 +47,7 @@ OccupancyGridSLAM::OccupancyGridSLAM(int         numParticles,
     lcm_.subscribe(LIDAR_CHANNEL, &OccupancyGridSLAM::handleLaser, this);
     lcm_.subscribe(ODOMETRY_CHANNEL, &OccupancyGridSLAM::handleOdometry, this);
     lcm_.subscribe(TRUE_POSE_CHANNEL, &OccupancyGridSLAM::handleOptitrack, this);
-
+    // std::cout << "Finished subscribe" << std::endl;
     // If we are only building the occupancy grid using ground-truth poses, then subscribe to the ground-truth poses.
     if(mode_ == mapping_only)
     {
@@ -84,6 +84,8 @@ void OccupancyGridSLAM::runSLAM(void)
 // Handlers for LCM messages
 void OccupancyGridSLAM::handleLaser(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const lidar_t* scan)
 {
+        // std::cout << "laser" << std::endl;
+
     const int kNumIgnoredForMessage = 10;   // number of scans to ignore before printing a message about odometry
 //std::cout << "laser!\n";
     std::lock_guard<std::mutex> autoLock(dataMutex_);
@@ -94,6 +96,8 @@ void OccupancyGridSLAM::handleLaser(const lcm::ReceiveBuffer* rbuf, const std::s
     bool havePose = (mode_ == mapping_only) // For mapping-only, ground-truth poses are needed
         && !groundTruthPoses_.empty()
         && (groundTruthPoses_.front().utime <= scan->times.front());
+    std::cout << "odom time" << odometryPoses_.front().utime<<std::endl;
+    std::cout << "laser time" << scan->times.front()<<std::endl;
 
     // If there's appropriate odometry or pose data for this scan, then add it to the queue.
     if(haveOdom || havePose)
@@ -126,7 +130,7 @@ void OccupancyGridSLAM::handleLaser(const lcm::ReceiveBuffer* rbuf, const std::s
 void OccupancyGridSLAM::handleOdometry(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const odometry_t* odometry)
 {
     std::lock_guard<std::mutex> autoLock(dataMutex_);
-
+        // std::cout << "Finished odometry" << std::endl;
     pose_xyt_t odomPose;
     odomPose.utime = odometry->utime;
     odomPose.x = odometry->x;
