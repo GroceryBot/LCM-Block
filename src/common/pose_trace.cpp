@@ -76,7 +76,7 @@ bool PoseTrace::containsPoseAtTime(int64_t time) const
     {
         return false;
     }
-    
+    std::cout << " " << front().utime << "\n " << time << "\n " << back().utime << std::endl;
     return (front().utime <= time) && (time <= back().utime);
 }
 

@@ -44,8 +44,8 @@ OccupancyGridSLAM::OccupancyGridSLAM(int         numParticles,
     currentScan_.utime = 0;
 
     // Laser and odometry data are always required
-    lcm_.subscribe(LIDAR_CHANNEL, &OccupancyGridSLAM::handleLaser, this);
     lcm_.subscribe(ODOMETRY_CHANNEL, &OccupancyGridSLAM::handleOdometry, this);
+    lcm_.subscribe(LIDAR_CHANNEL, &OccupancyGridSLAM::handleLaser, this);
     lcm_.subscribe(TRUE_POSE_CHANNEL, &OccupancyGridSLAM::handleOptitrack, this);
     // std::cout << "Finished subscribe" << std::endl;
     // If we are only building the occupancy grid using ground-truth poses, then subscribe to the ground-truth poses.
@@ -75,7 +75,7 @@ void OccupancyGridSLAM::runSLAM(void)
         // Otherwise, do a quick spin while waiting for data rather than using more complicated condition variable.
         else
         {
-            usleep(1000);
+            usleep(20000);
         }
     }
 }
@@ -84,7 +84,6 @@ void OccupancyGridSLAM::runSLAM(void)
 // Handlers for LCM messages
 void OccupancyGridSLAM::handleLaser(const lcm::ReceiveBuffer* rbuf, const std::string& channel, const lidar_t* scan)
 {
-        // std::cout << "laser" << std::endl;
 
     const int kNumIgnoredForMessage = 10;   // number of scans to ignore before printing a message about odometry
 //std::cout << "laser!\n";
@@ -92,12 +91,15 @@ void OccupancyGridSLAM::handleLaser(const lcm::ReceiveBuffer* rbuf, const std::s
     // Ignore scans until odometry data arrives -- need odometry before a scan to safely built the map
     bool haveOdom = (mode_ != mapping_only) // For full SLAM, odometry data is needed.
         && !odometryPoses_.empty()
-        && (odometryPoses_.front().utime <= scan->times.front());
+        && (odometryPoses_.front().utime <= scan->utime);
+    
+    std::cout<<"odo.front.ut and scan.ut: \n" << odometryPoses_.front().utime <<" \n"<< scan->utime;
     bool havePose = (mode_ == mapping_only) // For mapping-only, ground-truth poses are needed
         && !groundTruthPoses_.empty()
-        && (groundTruthPoses_.front().utime <= scan->times.front());
-    std::cout << "odom time" << odometryPoses_.front().utime<<std::endl;
-    std::cout << "laser time" << scan->times.front()<<std::endl;
+        && (groundTruthPoses_.front().utime <= scan->utime);
+    // std::cout << "odom time " << odometryPoses_.front().utime<<std::endl;
+    // std::cout << "laser time" << scan->utime<<std::endl;
+    std::cout << "have odom " << haveOdom <<std::endl;
 
     // If there's appropriate odometry or pose data for this scan, then add it to the queue.
     if(haveOdom || havePose)
@@ -137,6 +139,8 @@ void OccupancyGridSLAM::handleOdometry(const lcm::ReceiveBuffer* rbuf, const std
     odomPose.y = odometry->y;
     odomPose.theta = odometry->theta;
     odometryPoses_.addPose(odomPose);
+        // std::cout << "odom time" << odomPose.utime<<std::endl;
+
 }
 
 
@@ -162,9 +166,10 @@ void OccupancyGridSLAM::handleOptitrack(const lcm::ReceiveBuffer* rbuf, const st
 bool OccupancyGridSLAM::isReadyToUpdate(void)
 {
     std::lock_guard<std::mutex> autoLock(dataMutex_);
+    std::cout << "Ready to update" << std::endl;
 
     bool haveData = false;
-
+    std::cout << "incomingscans_ "<< !incomingScans_.empty() << std::endl;
     // If there's at least one scan to process, then check if odometry/pose information is available
     if(!incomingScans_.empty())
     {
@@ -175,11 +180,17 @@ bool OccupancyGridSLAM::isReadyToUpdate(void)
         // interpolation of robot motion during the scan can be performed.
 
         // Only care if there's odometry data if we aren't in mapping-only mode
-        bool haveNewOdom = (mode_ != mapping_only) && (odometryPoses_.containsPoseAtTime(nextScan.times.back()));
+        bool haveNewOdom = (mode_ != mapping_only) && (odometryPoses_.containsPoseAtTime(nextScan.utime));
         // Otherwise, only see if a new pose has arrived
-        bool haveNewPose = (mode_ == mapping_only) && (groundTruthPoses_.containsPoseAtTime(nextScan.times.back()));
+        bool haveNewPose = (mode_ == mapping_only) && (groundTruthPoses_.containsPoseAtTime(nextScan.utime));
 
         haveData = haveNewOdom || haveNewPose;
+        std::cout << haveNewOdom << " " << waitingForOptitrack_ <<std::endl;
+        // if(!haveNewOdom){
+        //     incomingScans_.clear();
+        // }
+
+
     }
 
     // If all SLAM data and optitrack data has arrived, then we're ready to go.
@@ -189,12 +200,18 @@ bool OccupancyGridSLAM::isReadyToUpdate(void)
 
 void OccupancyGridSLAM::runSLAMIteration(void)
 {
+    std::cout << "Enter slam itermation" << std::endl;
     copyDataForSLAMUpdate();
+        std::cout << "SLAM_Update" << std::endl;
+
     initializePosesIfNeeded();
+        std::cout << "init pose" << std::endl;
 
     // Sanity check the laser data to see if rplidar_driver has lost sync
     if(currentScan_.num_ranges > 100)//250)
     {
+        std::cout << "Sanity Check" << std::endl;
+
         updateLocalization();
         updateMap();
     }
@@ -219,11 +236,11 @@ void OccupancyGridSLAM::copyDataForSLAMUpdate(void)
         // No localization is performed during mapping-only mode, so the previous pose needs to be correctly adjusted
         // here.
         previousPose_ = currentPose_;
-        currentPose_  = groundTruthPoses_.poseAt(currentScan_.times.back());
+        currentPose_  = groundTruthPoses_.poseAt(currentScan_.utime);
     }
     else
     {
-        currentOdometry_ = odometryPoses_.poseAt(currentScan_.times.back());
+        currentOdometry_ = odometryPoses_.poseAt(currentScan_.utime);
     }
 }
 
@@ -236,10 +253,10 @@ void OccupancyGridSLAM::initializePosesIfNeeded(void)
     if(!haveInitializedPoses_)
     {
         previousPose_ = initialPose_;
-        previousPose_.utime = currentScan_.times.front();
+        previousPose_.utime = currentScan_.utime;
 
         currentPose_ = previousPose_;
-        currentPose_.utime  = currentScan_.times.back();
+        currentPose_.utime  = currentScan_.utime;
         haveInitializedPoses_ = true;
 
         filter_.initializeFilterAtPose(previousPose_);
@@ -251,8 +268,12 @@ void OccupancyGridSLAM::initializePosesIfNeeded(void)
 
 void OccupancyGridSLAM::updateLocalization(void)
 {
+        std::cout << "UPDATE LOCALIZATION" << std::endl;
+
     if(haveMap_ && (mode_ != mapping_only))
     {
+                std::cout << "start LOCALIZATION" << std::endl;
+
         previousPose_ = currentPose_;
         currentPose_  = filter_.updateFilter(currentOdometry_, currentScan_, map_);//, v_, omega_, utime_); //remove last 3 args for odo
 
@@ -267,17 +288,22 @@ void OccupancyGridSLAM::updateLocalization(void)
 
 void OccupancyGridSLAM::updateMap(void)
 {
+
     if(mode_ != localization_only)
     {
         // Process the map
         mapper_.updateMap(currentScan_, currentPose_, map_);
         haveMap_ = true;
+                    std::cout << "have map" << std::endl;
+
     }
 
     // Publish the map even in localization-only mode to ensure the visualization is meaningful
     // Send every 5th map -- about 1Hz update rate for map output -- can change if want more or less during operation
     if(mapUpdateCount_ % 5 == 0)
     {
+            std::cout << "Publish map" << std::endl;
+
         auto mapMessage = map_.toLCM();
         lcm_.publish(SLAM_MAP_CHANNEL, &mapMessage);
         //map_.saveToFile("current.map");
