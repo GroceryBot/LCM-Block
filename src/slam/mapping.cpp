@@ -140,6 +140,7 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
         float y0 = ml_scan[i].origin.y;
         float x1 = (ml_scan[i].origin.x + calculateX(ml_scan[i].range, ml_scan[i].theta));
         float y1 = (ml_scan[i].origin.y + calculateY(ml_scan[i].range, ml_scan[i].theta));
+        
         if (std::abs(y1 - y0) < std::abs(x1 - x0))
         {
             if (x0 > x1)
@@ -179,7 +180,10 @@ void Mapping::updateMap(const lidar_t &scan, const pose_xyt_t &pose, OccupancyGr
             if (val >= 127 || val + kHitOdds_ >= 127)
                 val = 127;
             else
-                val += kHitOdds_;
+                if(ml_scan[i].range > 5.0)
+                    val += kHitOdds_/3;
+                else
+                    val += kHitOdds_;
             map.setLogOdds(metersToCellX(x1, map), metersToCellY(y1, map), val);
         // }
         // else {

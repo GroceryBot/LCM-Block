@@ -19,11 +19,11 @@ OccupancyGridSLAM::OccupancyGridSLAM(int         numParticles,
 , haveMap_(false)
 , numIgnoredScans_(0)
 , filter_(numParticles)
-, map_(10.0f, 10.0f, 0.05f) //30,30,0.1  // create a 10m x 10m grid with 0.05m cells
+, map_(30.0f, 30.0f, 0.10f) //30,30,0.1  // create a 30m x 30m grid with 0.05m cells
 , mapper_(5.0f, hitOddsIncrease, missOddsDecrease)
 , lcm_(lcmComm)
 , mapUpdateCount_(0)
-{
+{   
     // Confirm that the mode is valid -- mapping-only and localization-only are not specified
     assert(!(mappingOnlyMode && localizationOnlyMap.length() > 0));
 

@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/mingshuo/botlab-w19/devel -DCMAKE_INSTALL_PREFIX=/home/mingshuo/botlab-w19/install -G Unix Makefiles
