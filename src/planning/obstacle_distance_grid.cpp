@@ -5,8 +5,8 @@
 ObstacleDistanceGrid::ObstacleDistanceGrid(void)
 : width_(0)
 , height_(0)
-, metersPerCell_(0.05f)
-, cellsPerMeter_(20.0f)
+, metersPerCell_(0.1f)
+, cellsPerMeter_(10.0f)
 {
 }
 
