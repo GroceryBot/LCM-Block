@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 
     pose_xyt_t nextPose;
 
-    nextPose.x = 2.0f;
+    nextPose.x = 1.0f;
     nextPose.y = 0.0f;
     nextPose.theta = M_PI_2;
     for (int n = 0; n < numTimes; ++n)
@@ -31,39 +31,39 @@ int main(int argc, char **argv)
         path.path[4 * n] = nextPose;
     }
 
-    nextPose.x = 2.0f;
-    nextPose.y = 2.0;
-    nextPose.theta = 0;
-    for (int n = 0; n < numTimes; ++n)
-    {
-        path.path[4 * n + 1] = nextPose;
-    }
+    // // nextPose.x = 4.0f;
+    // // nextPose.y = 0.0;
+    // // nextPose.theta = 0;
+    // // for (int n = 0; n < numTimes; ++n)
+    // // {
+    // //     path.path[4 * n + 1] = nextPose;
+    // // }
 
-    nextPose.x = 0.0f;
-    nextPose.y = 2.0f;
-    nextPose.theta = -M_PI;
-    for (int n = 0; n < numTimes; ++n)
-    {
-        path.path[4 * n + 2] = nextPose;
-    }
+    // // nextPose.x = 6.0f;
+    // // nextPose.y = 0.0f;
+    // // nextPose.theta = -M_PI;
+    // // for (int n = 0; n < numTimes; ++n)
+    // // {
+    // //     path.path[4 * n + 2] = nextPose;
+    // // }
 
-    nextPose.x = 0.0f;
-    nextPose.y = 0.0f;
-    nextPose.theta = -M_PI_2;
-    for (int n = 0; n < numTimes; ++n)
-    {
-        path.path[4 * n + 3] = nextPose;
-    }
+    // // nextPose.x = 7.0f;
+    // // nextPose.y = 0.0f;
+    // // nextPose.theta = -M_PI_2;
+    // // for (int n = 0; n < numTimes; ++)
+    // // {
+    // //     path.path[4 * n + 3] = nextPose;
+    // // }
 
     // Return to original heading after completing all circuits
     //    nextPose.theta = 0.0f;
     //    path.path.push_back(nextPose);
 
-    nextPose.x = 0.0f;
-    nextPose.y = 0.0f;
-    nextPose.theta = 0.0f;
-    path.path.insert(path.path.begin(), nextPose);
-    std::reverse(path.path.begin(), path.path.end());
+    // // nextPose.x = 0.0f;
+    // // nextPose.y = 0.0f;
+    // // nextPose.theta = 0.0f;
+    // // path.path.insert(path.path.begin(), nextPose);
+    // // std::reverse(path.path.begin(), path.path.end());
 
     path.path_length = path.path.size();
 

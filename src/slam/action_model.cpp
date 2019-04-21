@@ -93,7 +93,7 @@ particle_t ActionModel::applyAction(const particle_t& sample)
 
     new_pose.x = pose.x + 0.55*del_trans_hat*cos(pose.theta + del_rot1_hat);
     new_pose.y = pose.y + 0.55*del_trans_hat*sin(pose.theta + del_rot1_hat);
-    new_pose.theta = pose.theta + 0.9*del_rot1_hat + del_rot2_hat;
+    new_pose.theta = pose.theta + 0.85*del_rot1_hat + del_rot2_hat;
     // new_pose.utime = sample.pose.utime;
     new_pose.utime = lastPose_[0].utime;
     new_sample.pose = new_pose;
